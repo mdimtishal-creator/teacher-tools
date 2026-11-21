@@ -1,8 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import DashboardHome from './pages/dashboard/DashboardHome'
-import Classes from './pages/dashboard/Classes' // Naya import
 
 function App() {
   return (
@@ -10,7 +9,8 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<DashboardHome />} />
-      <Route path="/dashboard/classes" element={<Classes />} /> {/* Naya route */}
+      {/* Fallback route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
