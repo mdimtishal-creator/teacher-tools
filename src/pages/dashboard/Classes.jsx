@@ -8,7 +8,6 @@ export default function Classes() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  // Page load hote hi purani classes fetch karo
   useEffect(() => {
     fetchClasses()
   }, [])
@@ -20,11 +19,11 @@ export default function Classes() {
       return
     }
 
-    // Database se classes lao
+    // CHANGE 1: Ab data class_name ke hisaab se sort hoga (A to Z)
     const { data, error } = await supabase
       .from('classes')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('class_name', { ascending: true }) 
 
     if (error) {
       console.log(error)
@@ -34,14 +33,11 @@ export default function Classes() {
     setLoading(false)
   }
 
-  // Nayi class add karo
   const addClass = async (e) => {
     e.preventDefault()
     if (!newClassName) return
-
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Database me save karo
     const { error } = await supabase
       .from('classes')
       .insert([{ class_name: newClassName, teacher_id: user.id }])
@@ -49,8 +45,25 @@ export default function Classes() {
     if (error) {
       alert(error.message)
     } else {
-      setNewClassName('') // Input clear karo
-      fetchClasses() // List refresh karo
+      setNewClassName('') 
+      fetchClasses() 
+    }
+  }
+
+  // CHANGE 2: Class Delete Karne Ka Function
+  const deleteClass = async (classId, className) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete "${className}"? All students in this class will also be deleted.`)
+    if (!confirmDelete) return
+
+    const { error } = await supabase
+      .from('classes')
+      .delete()
+      .eq('id', classId)
+
+    if (error) {
+      alert("Error: " + error.message)
+    } else {
+      fetchClasses() // Delete hone ke baad list refresh karo
     }
   }
 
@@ -84,15 +97,26 @@ export default function Classes() {
         </div>
 
         {/* Classes List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {classes.map((cls) => (
-  <Link to={`/dashboard/classes/${cls.id}`} key={cls.id} className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-    <h3 className="font-bold text-xl text-primary mb-2">{cls.class_name}</h3>
-    <p className="text-sm text-gray-500">Click to view students →</p>
-  </Link>
-))}
+            // CHANGE 3: Card ko Link se Div me badla taaki button click aur link click alag ho sake
+            <div key={cls.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition">
+              
+              <Link to={`/dashboard/classes/${cls.id}`} className="flex-1 cursor-pointer hover:opacity-80">
+                <h3 className="font-bold text-xl text-primary mb-1">{cls.class_name}</h3>
+                <p className="text-sm text-gray-500">Click to view students →</p>
+              </Link>
+
+              <button 
+                onClick={() => deleteClass(cls.id, cls.class_name)}
+                className="text-red-500 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg font-medium text-sm transition ml-4"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
           {classes.length === 0 && (
-            <p className="text-gray-500 col-span-2 text-center py-10">No classes added yet. Add your first class above!</p>
+            <p className="text-gray-500 text-center py-10">No classes added yet. Add your first class above!</p>
           )}
         </div>
       </main>
