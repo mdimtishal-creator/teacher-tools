@@ -36,17 +36,25 @@ export default function DashboardHome() {
         <p className="text-gray-600 mb-8">Manage your classes, students, and marksheets here.</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
           {/* Card 1: Classes */}
           <Link to="/dashboard/classes" className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
-  <h3 className="text-xl font-bold text-primary mb-2">My Classes</h3>
-  <p className="text-gray-600">Add new classes and manage your students.</p>
-</Link>
+            <h3 className="text-xl font-bold text-primary mb-2">My Classes</h3>
+            <p className="text-gray-600">Add new classes and manage your students.</p>
+          </Link>
 
-          {/* Card 2: Attendance (Coming Soon) */}
+          {/* Card 2: Exams & Marks (YE NAYA ADD HUA HAI) */}
+          <Link to="/dashboard/exams" className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
+            <h3 className="text-xl font-bold text-green-600 mb-2">Exams & Marks</h3>
+            <p className="text-gray-600">Enter subject-wise marks for your classes.</p>
+          </Link>
+
+          {/* Card 3: Attendance (Coming Soon) */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 opacity-60">
             <h3 className="text-xl font-bold text-gray-500 mb-2">Attendance</h3>
             <p className="text-gray-400">Coming soon...</p>
           </div>
+
         </div>
       </main>
     </div>
