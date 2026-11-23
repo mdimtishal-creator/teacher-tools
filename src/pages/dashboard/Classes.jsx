@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function Classes() {
   const [classes, setClasses] = useState([])
@@ -86,10 +86,11 @@ export default function Classes() {
         {/* Classes List */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {classes.map((cls) => (
-            <div key={cls.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-xl text-dark mb-2">{cls.class_name}</h3>
-              <p className="text-sm text-gray-500">Created on: {new Date(cls.created_at).toLocaleDateString()}</p>
-            </div>
+  <Link to={`/dashboard/classes/${cls.id}`} key={cls.id} className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+    <h3 className="font-bold text-xl text-primary mb-2">{cls.class_name}</h3>
+    <p className="text-sm text-gray-500">Click to view students →</p>
+  </Link>
+))}
           ))}
           {classes.length === 0 && (
             <p className="text-gray-500 col-span-2 text-center py-10">No classes added yet. Add your first class above!</p>
