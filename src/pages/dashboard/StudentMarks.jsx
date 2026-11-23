@@ -24,6 +24,25 @@ export default function StudentMarks() {
     setLoading(false)
   }
 
+  // ==========================================
+  // 🗑️ SUBJECT DELETE KARNE KA FUNCTION
+  // ==========================================
+  const deleteSubject = async (subjectName) => {
+    if (!window.confirm(`Are you sure you want to delete all marks for ${subjectName}?`)) return
+
+    const { error } = await supabase
+      .from('marks')
+      .delete()
+      .eq('student_id', studentId)
+      .eq('subject', subjectName)
+
+    if (error) {
+      alert("Error deleting: " + error.message)
+    } else {
+      fetchData() // Delete hone ke baad naya data fetch karo
+    }
+  }
+
   if (loading) return <div className="p-10 text-center">Loading Marksheet...</div>
   if (!student) return <div className="p-10 text-center">Student not found</div>
 
@@ -31,13 +50,9 @@ export default function StudentMarks() {
   // 🧮 SMART CALCULATION LOGIC
   // ==========================================
   
-  // 1. Saare unique subjects nikaalo jo is student ne liye hain
   const uniqueSubjects = [...new Set(marks.map(m => m.subject))]
-
-  // 2. Data ko group karo (Subject wise aur Exam wise)
   const examsList = ['Term 1', 'Term 2', 'Half Yearly', 'Term 3', 'Term 4', 'Final Exam']
   
-  // Har subject ke liye alag marks dictionary banao
   const gridData = uniqueSubjects.map(sub => {
     const subMarks = {}
     examsList.forEach(exam => {
@@ -47,7 +62,6 @@ export default function StudentMarks() {
     return { subject: sub, marks: subMarks }
   })
 
-  // 3. Column Totals Calculate Karo
   const calculateColumnTotal = (examName) => {
     let obt = 0, max = 0
     gridData.forEach(row => {
@@ -67,24 +81,15 @@ export default function StudentMarks() {
   const t4 = calculateColumnTotal('Term 4')
   const final = calculateColumnTotal('Final Exam')
 
-  // 4. Group Totals (T1+T2+HY) aur (T3+T4+Final)
-  const group1Total = { 
-    obt: t1.obt + t2.obt + hy.obt, 
-    max: t1.max + t2.max + hy.max 
-  }
+  const group1Total = { obt: t1.obt + t2.obt + hy.obt, max: t1.max + t2.max + hy.max }
   const group1Percent = group1Total.max > 0 ? ((group1Total.obt / group1Total.max) * 100).toFixed(2) : 0
 
-  const group2Total = { 
-    obt: t3.obt + t4.obt + final.obt, 
-    max: t3.max + t4.max + final.max 
-  }
+  const group2Total = { obt: t3.obt + t4.obt + final.obt, max: t3.max + t4.max + final.max }
   const group2Percent = group2Total.max > 0 ? ((group2Total.obt / group2Total.max) * 100).toFixed(2) : 0
 
-  // 5. Overall Total
   const overallTotal = { obt: group1Total.obt + group2Total.obt, max: group1Total.max + group2Total.max }
   const overallPercent = overallTotal.max > 0 ? ((overallTotal.obt / overallTotal.max) * 100).toFixed(2) : 0
 
-  // 6. Grade
   const getGrade = (percent) => {
     if (percent >= 90) return 'A+'
     if (percent >= 80) return 'A'
@@ -137,11 +142,12 @@ export default function StudentMarks() {
                   <th className="p-2 border border-gray-300">Term 4</th>
                   <th className="p-2 border border-gray-300">Final</th>
                   <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (3+4+Fin)</th>
+                  {/* Naya Action Column */}
+                  <th className="p-2 border border-gray-300 print:hidden">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {gridData.map((row, idx) => {
-                  // Is specific subject ka half yearly group total
                   const r_t1 = row.marks['Term 1']?.marks_obtained || '-'
                   const r_t2 = row.marks['Term 2']?.marks_obtained || '-'
                   const r_hy = row.marks['Half Yearly']?.marks_obtained || '-'
@@ -168,6 +174,16 @@ export default function StudentMarks() {
                       <td className="p-2 border border-gray-300">{r_t4}</td>
                       <td className="p-2 border border-gray-300">{r_fin}</td>
                       <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g2}</td>
+                      
+                      {/* Delete Button (Print me nahi dikhega) */}
+                      <td className="p-2 border border-gray-300 print:hidden text-center">
+                        <button 
+                          onClick={() => deleteSubject(row.subject)}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -184,6 +200,7 @@ export default function StudentMarks() {
                   <td className="p-2 border border-gray-300">{t4.obt} / {t4.max}</td>
                   <td className="p-2 border border-gray-300">{final.obt} / {final.max}</td>
                   <td className="p-2 border border-gray-300 bg-blue-100 text-primary">{group2Total.obt} / {group2Total.max}</td>
+                  <td className="p-2 border border-gray-300 print:hidden"></td> {/* Empty cell for Action column */}
                 </tr>
                 <tr className="bg-gray-100 font-bold text-gray-800">
                   <td className="p-2 border border-gray-300 text-left">PERCENTAGE</td>
@@ -195,6 +212,7 @@ export default function StudentMarks() {
                   <td className="p-2 border border-gray-300">{t4.percent}%</td>
                   <td className="p-2 border border-gray-300">{final.percent}%</td>
                   <td className="p-2 border border-gray-300 bg-blue-200 text-primary">{group2Percent}%</td>
+                  <td className="p-2 border border-gray-300 print:hidden"></td> {/* Empty cell for Action column */}
                 </tr>
               </tfoot>
             </table>
