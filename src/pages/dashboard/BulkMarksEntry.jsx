@@ -7,12 +7,13 @@ export default function BulkMarksEntry() {
   const navigate = useNavigate()
   
   const [students, setStudents] = useState([])
-  const [subjectsList, setSubjectsList] = useState([]) // Naya state subjects ke liye
+  const [subjectsList, setSubjectsList] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [fetchingMarks, setFetchingMarks] = useState(false)
   
   const [examName, setExamName] = useState('Term 1')
-  const [subject, setSubject] = useState('') // Selected subject
+  const [subject, setSubject] = useState('')
   const [maxMarks, setMaxMarks] = useState('100')
   const [marksData, setMarksData] = useState({})
 
@@ -20,19 +21,49 @@ export default function BulkMarksEntry() {
     fetchData()
   }, [])
 
+  // Jab bhi Exam ya Subject change ho, purane marks fetch karo
+  useEffect(() => {
+    if (subject && students.length > 0) {
+      fetchExistingMarks()
+    }
+  }, [examName, subject, students])
+
   const fetchData = async () => {
-    // Students lao
     const { data: sData } = await supabase.from('students').select('id, student_name, roll_number').eq('class_id', id).order('roll_number', { ascending: true })
     if (sData) setStudents(sData)
 
-    // Subjects lao
     const { data: subData } = await supabase.from('subjects').select('subject_name').eq('class_id', id).order('subject_name', { ascending: true })
     if (subData && subData.length > 0) {
       setSubjectsList(subData)
-      setSubject(subData[0].subject_name) // Pehla subject default select karo
+      setSubject(subData[0].subject_name)
     }
-    
     setLoading(false)
+  }
+
+  // Ye function database se pehle se bhare hue marks layega
+  const fetchExistingMarks = async () => {
+    setFetchingMarks(true)
+    const studentIds = students.map(s => s.id)
+    
+    const { data, error } = await supabase
+      .from('marks')
+      .select('student_id, marks_obtained, max_marks')
+      .eq('exam_name', examName)
+      .eq('subject', subject)
+      .in('student_id', studentIds)
+
+    if (!error && data) {
+      const newMarksData = {}
+      data.forEach(m => {
+        newMarksData[m.student_id] = m.marks_obtained
+        // Agar max marks alag the toh update kar do, warna default 100
+        if (m.max_marks) setMaxMarks(m.max_marks.toString()) 
+      })
+      setMarksData(newMarksData)
+    } else {
+      setMarksData({}) // Agar naye marks hain toh sab clear kar do
+    }
+    setFetchingMarks(false)
   }
 
   const handleMarksChange = (studentId, value) => {
@@ -40,13 +71,9 @@ export default function BulkMarksEntry() {
   }
 
   const saveAllMarks = async () => {
-    if (!subject) {
-      alert("Please select a subject!")
-      return
-    }
+    if (!subject) { alert("Please select a subject!"); return }
 
     setSaving(true)
-    
     const rowsToInsert = students
       .filter(s => marksData[s.id] !== undefined && marksData[s.id] !== '')
       .map(s => ({
@@ -58,18 +85,14 @@ export default function BulkMarksEntry() {
       }))
 
     if (rowsToInsert.length === 0) {
-      alert("No marks entered!")
-      setSaving(false)
-      return
+      alert("No marks entered!"); setSaving(false); return
     }
 
     const { error } = await supabase.from('marks').upsert(rowsToInsert, { onConflict: 'student_id, exam_name, subject' })
 
     if (error) alert("Error saving: " + error.message)
-    else {
-      alert("All marks saved successfully!")
-      setMarksData({}) 
-    }
+    else alert("All marks saved successfully!")
+    
     setSaving(false)
   }
 
@@ -83,7 +106,6 @@ export default function BulkMarksEntry() {
       </nav>
 
       <main className="max-w-4xl mx-auto p-4 md:p-6">
-        
         <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Exam</label>
@@ -92,13 +114,12 @@ export default function BulkMarksEntry() {
               <option>Term 2</option>
               <option>Half Yearly</option>
               <option>Term 3</option>
-  <option>Term 4</option>
-  <option>Final Exam</option>
+              <option>Term 4</option>
+              <option>Final Exam</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-            {/* Yahan Dropdown aayega */}
             <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full border p-2 rounded focus:ring-primary outline-none">
               {subjectsList.length === 0 && <option value="">No subjects added</option>}
               {subjectsList.map(sub => (
@@ -122,7 +143,9 @@ export default function BulkMarksEntry() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {fetchingMarks && <tr><td colSpan="3" className="p-4 text-center text-primary font-medium">Fetching saved marks...</td></tr>}
+              
+              {!fetchingMarks && students.map((student) => (
                 <tr key={student.id} className="border-b last:border-0 hover:bg-gray-50">
                   <td className="p-4 text-gray-500">{student.roll_number || '-'}</td>
                   <td className="p-4 font-medium text-dark">{student.student_name}</td>
@@ -132,7 +155,7 @@ export default function BulkMarksEntry() {
                       placeholder={`/${maxMarks}`}
                       value={marksData[student.id] || ''}
                       onChange={(e) => handleMarksChange(student.id, e.target.value)}
-                      className="w-full border border-gray-300 p-2 rounded text-center focus:ring-2 focus:ring-primary outline-none"
+                      className="w-full border border-gray-300 p-2 rounded text-center focus:ring-2 focus:ring-primary outline-none font-bold text-primary"
                     />
                   </td>
                 </tr>
@@ -142,11 +165,10 @@ export default function BulkMarksEntry() {
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-center shadow-lg">
-          <button onClick={saveAllMarks} disabled={saving} className="bg-primary text-white px-10 py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition shadow-md w-full max-w-md disabled:opacity-50">
-            {saving ? 'Saving Data...' : 'Save All Marks'}
+          <button onClick={saveAllMarks} disabled={saving || fetchingMarks} className="bg-primary text-white px-10 py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition shadow-md w-full max-w-md disabled:opacity-50">
+            {saving ? 'Saving Data...' : 'Save / Update Marks'}
           </button>
         </div>
-
       </main>
     </div>
   )
