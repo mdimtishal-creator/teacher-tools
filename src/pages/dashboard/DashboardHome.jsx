@@ -37,10 +37,10 @@ export default function DashboardHome() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Classes */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
-            <h3 className="text-xl font-bold text-primary mb-2">My Classes</h3>
-            <p className="text-gray-600">Add new classes and manage your students.</p>
-          </div>
+          <Link to="/dashboard/classes" className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
+  <h3 className="text-xl font-bold text-primary mb-2">My Classes</h3>
+  <p className="text-gray-600">Add new classes and manage your students.</p>
+</Link>
 
           {/* Card 2: Attendance (Coming Soon) */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 opacity-60">
