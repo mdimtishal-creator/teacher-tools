@@ -4,6 +4,8 @@ import DashboardHome from './pages/dashboard/DashboardHome'
 import Classes from './pages/dashboard/Classes'
 import ClassDetails from './pages/dashboard/ClassDetails'
 import BulkMarksEntry from './pages/dashboard/BulkMarksEntry'
+import ExamsHome from './pages/dashboard/ExamsHome'
+import StudentMarks from './pages/dashboard/StudentMarks'
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
       <Route path="/dashboard/classes" element={<Classes />} />
       <Route path="/dashboard/classes/:id" element={<ClassDetails />} />
       <Route path="/dashboard/classes/:id/marks" element={<BulkMarksEntry />} />
+      <Route path="/dashboard/exams" element={<ExamsHome />} />
+<Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
       
       {/* Fallback sabse aakhir me */}
       <Route path="*" element={<Login />} />
