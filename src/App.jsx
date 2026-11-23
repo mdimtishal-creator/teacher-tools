@@ -7,10 +7,12 @@ import ClassDetails from './pages/dashboard/ClassDetails'
 function App() {
   return (
     <Routes>
-      <Route path="*" element={<Login />} />
       <Route path="/dashboard" element={<DashboardHome />} />
       <Route path="/dashboard/classes" element={<Classes />} />
       <Route path="/dashboard/classes/:id" element={<ClassDetails />} />
+      
+      {/* Fallback sabse aakhir me */}
+      <Route path="*" element={<Login />} />
     </Routes>
   )
 }
