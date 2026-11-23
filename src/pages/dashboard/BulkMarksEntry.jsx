@@ -91,7 +91,9 @@ export default function BulkMarksEntry() {
               <option>Term 1</option>
               <option>Term 2</option>
               <option>Half Yearly</option>
-              <option>Final Exam</option>
+              <option>Term 3</option>
+  <option>Term 4</option>
+  <option>Final Exam</option>
             </select>
           </div>
           <div>
