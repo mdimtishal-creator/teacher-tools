@@ -91,7 +91,6 @@ export default function Classes() {
     <p className="text-sm text-gray-500">Click to view students →</p>
   </Link>
 ))}
-          ))}
           {classes.length === 0 && (
             <p className="text-gray-500 col-span-2 text-center py-10">No classes added yet. Add your first class above!</p>
           )}
