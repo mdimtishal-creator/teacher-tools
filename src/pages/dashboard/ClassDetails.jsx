@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 export default function ClassDetails() {
-  const { id } = useParams() // URL se class ID mili
+  const { id } = useParams() 
   const navigate = useNavigate()
   
   const [students, setStudents] = useState([])
@@ -11,7 +11,6 @@ export default function ClassDetails() {
   const [newRollNo, setNewRollNo] = useState('')
   const [loading, setLoading] = useState(true)
 
-  // Page load hote hi students fetch karo
   useEffect(() => {
     fetchStudents()
   }, [])
@@ -20,36 +19,47 @@ export default function ClassDetails() {
     const { data, error } = await supabase
       .from('students')
       .select('*')
-      .eq('class_id', id) // Sirf is class ke students
+      .eq('class_id', id)
       .order('roll_number', { ascending: true })
 
-    if (error) {
-      console.log(error)
-    } else {
-      setStudents(data)
-    }
+    if (error) console.log(error)
+    else setStudents(data)
+    
     setLoading(false)
   }
 
-  // Naya student add karo
   const addStudent = async (e) => {
     e.preventDefault()
     if (!newStudentName) return
 
     const { error } = await supabase
       .from('students')
-      .insert([{ 
-        class_id: id, 
-        student_name: newStudentName,
-        roll_number: newRollNo 
-      }])
+      .insert([{ class_id: id, student_name: newStudentName, roll_number: newRollNo }])
 
     if (error) {
       alert(error.message)
     } else {
       setNewStudentName('')
       setNewRollNo('')
-      fetchStudents() // List refresh karo
+      fetchStudents() 
+    }
+  }
+
+  // NAYA FUNCTION: Student Delete Karne Ke Liye
+  const deleteStudent = async (studentId, studentName) => {
+    // Pehle confirm karo taaki galti se delete na ho
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${studentName}?`)
+    if (!confirmDelete) return
+
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', studentId)
+
+    if (error) {
+      alert("Error deleting: " + error.message)
+    } else {
+      fetchStudents() // Delete hone ke baad list refresh karo
     }
   }
 
@@ -86,18 +96,19 @@ export default function ClassDetails() {
               className="border border-gray-300 p-3 rounded-lg w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button type="submit" className="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
-              Add Student
+              Add
             </button>
           </form>
         </div>
 
-        {/* Students List */}
+        {/* Students List Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="p-4 font-medium text-gray-600">Roll No</th>
                 <th className="p-4 font-medium text-gray-600">Student Name</th>
+                <th className="p-4 font-medium text-gray-600 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -105,12 +116,23 @@ export default function ClassDetails() {
                 <tr key={student.id} className="border-b last:border-0 hover:bg-gray-50">
                   <td className="p-4 text-gray-600">{student.roll_number || '-'}</td>
                   <td className="p-4 font-medium text-dark">{student.student_name}</td>
+                  
+                  {/* Delete Button */}
+                  <td className="p-4 text-right">
+                    <button 
+                      onClick={() => deleteStudent(student.id, student.student_name)}
+                      className="text-red-500 hover:text-red-700 font-medium text-sm bg-red-50 px-3 py-1 rounded transition"
+                    >
+                      Delete
+                    </button>
+                  </td>
+
                 </tr>
               ))}
               {students.length === 0 && (
                 <tr>
-                  <td colSpan="2" className="p-8 text-center text-gray-500">
-                    No students added yet. Add your first student above!
+                  <td colSpan="3" className="p-8 text-center text-gray-500">
+                    No students added yet.
                   </td>
                 </tr>
               )}
