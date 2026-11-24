@@ -7,6 +7,7 @@ import BulkMarksEntry from './pages/dashboard/BulkMarksEntry'
 import ExamsHome from './pages/dashboard/ExamsHome'
 import ReportCardsHome from './pages/dashboard/ReportCardsHome'
 import ClassReportCards from './pages/dashboard/ClassReportCards'
+import StudentMarks from './pages/dashboard/StudentMarks'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Route path="/dashboard/exams" element={<ExamsHome />} />
       <Route path="/dashboard/report-cards" element={<ReportCardsHome />} />
 <Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
+      <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
 
       
       {/* Fallback sabse aakhir me */}
