@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import DashboardHome from './pages/dashboard/DashboardHome'
 import Classes from './pages/dashboard/Classes'
@@ -12,18 +12,30 @@ import StudentMarks from './pages/dashboard/StudentMarks'
 function App() {
   return (
     <Routes>
+      {/* Auth */}
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+
+      {/* Dashboard */}
       <Route path="/dashboard" element={<DashboardHome />} />
+
+      {/* Classes */}
       <Route path="/dashboard/classes" element={<Classes />} />
       <Route path="/dashboard/classes/:id" element={<ClassDetails />} />
       <Route path="/dashboard/classes/:id/marks" element={<BulkMarksEntry />} />
+
+      {/* Exams */}
       <Route path="/dashboard/exams" element={<ExamsHome />} />
+
+      {/* Report Cards */}
       <Route path="/dashboard/report-cards" element={<ReportCardsHome />} />
-<Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
+      <Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
+
+      {/* Student Marksheet / Report Card (naya) */}
       <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
 
-      
-      {/* Fallback sabse aakhir me */}
-      <Route path="*" element={<Login />} />
+      {/* Fallback: galat URL -> login par wapas */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
