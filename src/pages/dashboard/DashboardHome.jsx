@@ -1,14 +1,43 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
-import { useDashboardStats } from '../../hooks/useDashboardStats'
+import { supabase } from '../../lib/supabase'
 import { 
   Users, BookOpen, FileText, Settings, 
   GraduationCap, ArrowRight, Activity, CheckCircle2 
 } from 'lucide-react'
 
 export default function DashboardHome() {
-  const { user } = useAuth()
-  const { stats, loading } = useDashboardStats()
+  const [user, setUser] = useState(null)
+  const [stats, setStats] = useState({ classes: 0, students: 0, subjects: 0, marks: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // 1. User fetch karo
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) setUser(user)
+
+        // 2. Stats fetch karo
+        const { count: classesCount } = await supabase.from('classes').select('*', { count: 'exact', head: true })
+        const { count: studentsCount } = await supabase.from('students').select('*', { count: 'exact', head: true })
+        const { count: subjectsCount } = await supabase.from('subjects').select('*', { count: 'exact', head: true })
+        const { count: marksCount } = await supabase.from('marks').select('*', { count: 'exact', head: true })
+
+        setStats({
+          classes: classesCount || 0,
+          students: studentsCount || 0,
+          subjects: subjectsCount || 0,
+          marks: marksCount || 0
+        })
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   // User ke email se naam nikaalna (e.g., "rahul@gmail.com" -> "Rahul")
   const userName = user?.email ? user.email.split('@')[0] : 'Teacher'
@@ -89,7 +118,7 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Getting Started Checklist (Real Data Based) */}
+      {/* Getting Started Checklist */}
       <div className="bg-white rounded-card border border-border p-6 md:p-8 shadow-card">
         <h2 className="text-lg font-bold text-dark mb-6">Getting Started</h2>
         <div className="space-y-4">
