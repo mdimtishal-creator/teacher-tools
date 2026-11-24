@@ -54,8 +54,13 @@ export default function DashboardHome() {
   <h3 className="text-xl font-bold text-purple-600 mb-2">Report Cards</h3>
   <p className="text-gray-600">View and print student marksheets.</p>
 </Link>
+          {/* Card 4: Settings */}
+<Link to="/dashboard/settings" className="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
+  <h3 className="text-xl font-bold text-orange-500 mb-2">School Settings</h3>
+  <p className="text-gray-600">Set your school name, logo, and principal details.</p>
+</Link>
 
-          {/* Card 3: Attendance (Coming Soon) */}
+          {/* Card 5 : Attendance (Coming Soon) */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 opacity-60">
             <h3 className="text-xl font-bold text-gray-500 mb-2">Attendance</h3>
             <p className="text-gray-400">Coming soon...</p>
