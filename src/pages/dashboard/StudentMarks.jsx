@@ -5,34 +5,50 @@ import { supabase } from '../../lib/supabase'
 export default function StudentMarks() {
   const { studentId } = useParams()
   const navigate = useNavigate()
-
+  
   const [student, setStudent] = useState(null)
   const [marks, setMarks] = useState([])
+  const [schoolInfo, setSchoolInfo] = useState(null) // 👈 School details ke liye
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchData()
-  }, [studentId]) // 👈 fix: studentId change par refresh
+  }, [studentId])
 
   const fetchData = async () => {
     setLoading(true)
+    
+    // 1. Student fetch karo
     const { data: sData, error: sError } = await supabase
       .from('students')
       .select('*')
       .eq('id', studentId)
       .single()
-
-    if (sError) console.error('Error fetching student:', sError.message)
+      
+    if (sError) console.error('Student fetch error:', sError.message)
     if (sData) setStudent(sData)
 
+    // 2. Marks fetch karo
     const { data: mData, error: mError } = await supabase
       .from('marks')
       .select('*')
       .eq('student_id', studentId)
-
-    if (mError) console.error('Error fetching marks:', mError.message)
+      
+    if (mError) console.error('Marks fetch error:', mError.message)
     if (mData) setMarks(mData)
 
+    // 3. School Settings fetch karo (Teacher ID ke hisaab se)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: settingsData } = await supabase
+        .from('school_settings')
+        .select('*')
+        .eq('teacher_id', user.id)
+        .single()
+      
+      if (settingsData) setSchoolInfo(settingsData)
+    }
+    
     setLoading(false)
   }
 
@@ -48,7 +64,7 @@ export default function StudentMarks() {
     if (error) {
       alert("Error deleting: " + error.message)
     } else {
-      fetchData()
+      fetchData() 
     }
   }
 
@@ -57,7 +73,7 @@ export default function StudentMarks() {
 
   const uniqueSubjects = [...new Set(marks.map(m => m.subject))]
   const examsList = ['Term 1', 'Term 2', 'Half Yearly', 'Term 3', 'Term 4', 'Final Exam']
-
+  
   const gridData = uniqueSubjects.map(sub => {
     const subMarks = {}
     examsList.forEach(exam => {
@@ -71,17 +87,16 @@ export default function StudentMarks() {
     let obt = 0, max = 0
     gridData.forEach(row => {
       if (row.marks[examName]) {
-        obt += row.marks[examName].marks_obtained
-        max += row.marks[examName].max_marks
+        obt += Number(row.marks[examName].marks_obtained)
+        max += Number(row.marks[examName].max_marks)
       }
     })
-    return { obt, max, percent: max > 0 ? ((obt / max) * 100).toFixed(1) : 0 }
+    return { obt, max, percent: max > 0 ? ((obt/max)*100).toFixed(1) : 0 }
   }
 
   const t1 = calculateColumnTotal('Term 1')
   const t2 = calculateColumnTotal('Term 2')
   const hy = calculateColumnTotal('Half Yearly')
-
   const t3 = calculateColumnTotal('Term 3')
   const t4 = calculateColumnTotal('Term 4')
   const final = calculateColumnTotal('Final Exam')
@@ -115,11 +130,21 @@ export default function StudentMarks() {
 
       <main className="max-w-5xl mx-auto p-4 md:p-6 mt-6">
         <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0">
-
-          {/* Header */}
-          <div className="text-center border-b-2 border-gray-800 pb-4 mb-6">
-            <h1 className="text-3xl font-extrabold text-dark uppercase tracking-wide">Student Report Card</h1>
-            <p className="text-gray-500 text-sm mt-1">Generated via Teacher Tools</p>
+          
+          {/* SCHOOL HEADER (Logo, Name) */}
+          <div className="text-center border-b-2 border-gray-800 pb-4 mb-6 flex flex-col items-center">
+            {schoolInfo?.school_logo_url && (
+              <img 
+                src={schoolInfo.school_logo_url} 
+                alt="School Logo" 
+                className="h-16 md:h-20 object-contain mb-2" 
+                onError={(e) => e.target.style.display = 'none'} 
+              />
+            )}
+            <h1 className="text-3xl font-extrabold text-dark uppercase tracking-wide">
+              {schoolInfo?.school_name || 'Student Report Card'}
+            </h1>
+            <p className="text-gray-500 text-sm mt-1 font-medium">Student Report Card</p>
           </div>
 
           {/* Student Info */}
@@ -155,32 +180,32 @@ export default function StudentMarks() {
                   const r_t1 = row.marks['Term 1']?.marks_obtained ?? '-'
                   const r_t2 = row.marks['Term 2']?.marks_obtained ?? '-'
                   const r_hy = row.marks['Half Yearly']?.marks_obtained ?? '-'
-                  const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-')
-                    ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy))
+                  const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-') 
+                    ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy)) 
                     : '-'
-
+                  
                   const r_t3 = row.marks['Term 3']?.marks_obtained ?? '-'
                   const r_t4 = row.marks['Term 4']?.marks_obtained ?? '-'
                   const r_fin = row.marks['Final Exam']?.marks_obtained ?? '-'
-                  const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-')
-                    ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin))
+                  const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-') 
+                    ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin)) 
                     : '-'
 
                   return (
                     <tr key={idx} className="hover:bg-gray-50">
-                      <td className="p-2 border border-gray-300 text-left font-bold text-gray-700">{row.subject}</td>
+                      <td className="p-2 border border-gray-300 text-left font-bold text-gray-700 uppercase">{row.subject}</td>
                       <td className="p-2 border border-gray-300">{r_t1}</td>
                       <td className="p-2 border border-gray-300">{r_t2}</td>
                       <td className="p-2 border border-gray-300">{r_hy}</td>
                       <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g1}</td>
-
+                      
                       <td className="p-2 border border-gray-300">{r_t3}</td>
                       <td className="p-2 border border-gray-300">{r_t4}</td>
                       <td className="p-2 border border-gray-300">{r_fin}</td>
                       <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g2}</td>
-
+                      
                       <td className="p-2 border border-gray-300 print:hidden text-center">
-                        <button
+                        <button 
                           onClick={() => deleteSubject(row.subject)}
                           className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded"
                         >
@@ -190,6 +215,14 @@ export default function StudentMarks() {
                     </tr>
                   )
                 })}
+                
+                {gridData.length === 0 && (
+                  <tr>
+                    <td colSpan="10" className="p-8 text-center text-gray-500 italic">
+                      Is student ki abhi tak koi marks save nahi hui hai.
+                    </td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-100 font-bold text-gray-800">
@@ -220,8 +253,19 @@ export default function StudentMarks() {
             </table>
           </div>
 
-          {/* OVERALL RESULT SUMMARY */}
-          <div className="flex justify-end mt-6">
+          {/* OVERALL RESULT & SIGNATURE */}
+          <div className="flex flex-col md:flex-row justify-between items-end mt-12 gap-8">
+            
+            {/* Principal Signature (Left side) */}
+            <div className="text-center w-48">
+              <div className="border-t border-gray-400 mb-2"></div>
+              <p className="font-bold text-gray-800 text-sm uppercase">
+                {schoolInfo?.principal_name || 'Principal'}
+              </p>
+              <p className="text-xs text-gray-500">Principal Signature</p>
+            </div>
+
+            {/* Overall Result Box (Right side) */}
             <div className="border-2 border-primary rounded-xl p-6 w-full md:w-80 bg-blue-50 print:bg-white">
               <h3 className="text-center font-bold text-lg mb-3 border-b border-blue-200 pb-2 text-primary">Overall Result</h3>
               <div className="flex justify-between mb-2">
@@ -237,6 +281,7 @@ export default function StudentMarks() {
                 <span className="font-extrabold text-2xl text-dark bg-white px-3 py-1 rounded shadow-sm print:shadow-none print:border">{getGrade(overallPercent)}</span>
               </div>
             </div>
+
           </div>
 
         </div>
