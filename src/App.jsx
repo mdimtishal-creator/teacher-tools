@@ -1,4 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from './routes/ProtectedRoute'
+import DashboardLayout from './components/layout/DashboardLayout'
+import NotFound from './routes/NotFound'
+
 import Login from './pages/Login'
 import DashboardHome from './pages/dashboard/DashboardHome'
 import Classes from './pages/dashboard/Classes'
@@ -17,27 +21,27 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
 
-      {/* Dashboard */}
-      <Route path="/dashboard" element={<DashboardHome />} />
+      {/* Protected Dashboard Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<DashboardHome />} />
+          
+          <Route path="/dashboard/classes" element={<Classes />} />
+          <Route path="/dashboard/classes/:id" element={<ClassDetails />} />
+          <Route path="/dashboard/classes/:id/marks" element={<BulkMarksEntry />} />
+          
+          <Route path="/dashboard/exams" element={<ExamsHome />} />
+          
+          <Route path="/dashboard/report-cards" element={<ReportCardsHome />} />
+          <Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
+          
+          <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
+          <Route path="/dashboard/settings" element={<Settings />} />
+        </Route>
+      </Route>
 
-      {/* Classes */}
-      <Route path="/dashboard/classes" element={<Classes />} />
-      <Route path="/dashboard/classes/:id" element={<ClassDetails />} />
-      <Route path="/dashboard/classes/:id/marks" element={<BulkMarksEntry />} />
-
-      {/* Exams */}
-      <Route path="/dashboard/exams" element={<ExamsHome />} />
-
-      {/* Report Cards */}
-      <Route path="/dashboard/report-cards" element={<ReportCardsHome />} />
-      <Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
-
-      {/* Student Marksheet / Report Card (naya) */}
-      <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
-<Route path="/dashboard/settings" element={<Settings />} />
-      
-      {/* Fallback: galat URL -> login par wapas */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
