@@ -8,6 +8,7 @@ import ExamsHome from './pages/dashboard/ExamsHome'
 import ReportCardsHome from './pages/dashboard/ReportCardsHome'
 import ClassReportCards from './pages/dashboard/ClassReportCards'
 import StudentMarks from './pages/dashboard/StudentMarks'
+import Settings from './pages/dashboard/Settings'
 
 function App() {
   return (
@@ -33,7 +34,8 @@ function App() {
 
       {/* Student Marksheet / Report Card (naya) */}
       <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
-
+<Route path="/dashboard/settings" element={<Settings />} />
+      
       {/* Fallback: galat URL -> login par wapas */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
