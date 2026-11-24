@@ -5,7 +5,6 @@ import {
   Users, BookOpen, FileText, Settings, 
   GraduationCap, ArrowRight, Activity, CheckCircle2 
 } from 'lucide-react'
-import { useSchoolSettings } from '../../hooks/useSchoolSettings' // Hum isko next stage me banayenge, abhi ke liye skip
 
 export default function DashboardHome() {
   const { user } = useAuth()
