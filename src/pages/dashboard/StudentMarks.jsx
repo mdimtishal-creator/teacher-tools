@@ -5,28 +5,37 @@ import { supabase } from '../../lib/supabase'
 export default function StudentMarks() {
   const { studentId } = useParams()
   const navigate = useNavigate()
-  
+
   const [student, setStudent] = useState(null)
   const [marks, setMarks] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [studentId]) // 👈 fix: studentId change par refresh
 
   const fetchData = async () => {
-    const { data: sData } = await supabase.from('students').select('*').eq('id', studentId).single()
+    setLoading(true)
+    const { data: sData, error: sError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .single()
+
+    if (sError) console.error('Error fetching student:', sError.message)
     if (sData) setStudent(sData)
 
-    const { data: mData } = await supabase.from('marks').select('*').eq('student_id', studentId)
+    const { data: mData, error: mError } = await supabase
+      .from('marks')
+      .select('*')
+      .eq('student_id', studentId)
+
+    if (mError) console.error('Error fetching marks:', mError.message)
     if (mData) setMarks(mData)
-    
+
     setLoading(false)
   }
 
-  // ==========================================
-  // 🗑️ SUBJECT DELETE KARNE KA FUNCTION
-  // ==========================================
   const deleteSubject = async (subjectName) => {
     if (!window.confirm(`Are you sure you want to delete all marks for ${subjectName}?`)) return
 
@@ -39,20 +48,16 @@ export default function StudentMarks() {
     if (error) {
       alert("Error deleting: " + error.message)
     } else {
-      fetchData() // Delete hone ke baad naya data fetch karo
+      fetchData()
     }
   }
 
   if (loading) return <div className="p-10 text-center">Loading Marksheet...</div>
   if (!student) return <div className="p-10 text-center">Student not found</div>
 
-  // ==========================================
-  // 🧮 SMART CALCULATION LOGIC
-  // ==========================================
-  
   const uniqueSubjects = [...new Set(marks.map(m => m.subject))]
   const examsList = ['Term 1', 'Term 2', 'Half Yearly', 'Term 3', 'Term 4', 'Final Exam']
-  
+
   const gridData = uniqueSubjects.map(sub => {
     const subMarks = {}
     examsList.forEach(exam => {
@@ -70,13 +75,13 @@ export default function StudentMarks() {
         max += row.marks[examName].max_marks
       }
     })
-    return { obt, max, percent: max > 0 ? ((obt/max)*100).toFixed(1) : 0 }
+    return { obt, max, percent: max > 0 ? ((obt / max) * 100).toFixed(1) : 0 }
   }
 
   const t1 = calculateColumnTotal('Term 1')
   const t2 = calculateColumnTotal('Term 2')
   const hy = calculateColumnTotal('Half Yearly')
-  
+
   const t3 = calculateColumnTotal('Term 3')
   const t4 = calculateColumnTotal('Term 4')
   const final = calculateColumnTotal('Final Exam')
@@ -110,7 +115,7 @@ export default function StudentMarks() {
 
       <main className="max-w-5xl mx-auto p-4 md:p-6 mt-6">
         <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0">
-          
+
           {/* Header */}
           <div className="text-center border-b-2 border-gray-800 pb-4 mb-6">
             <h1 className="text-3xl font-extrabold text-dark uppercase tracking-wide">Student Report Card</h1>
@@ -142,24 +147,23 @@ export default function StudentMarks() {
                   <th className="p-2 border border-gray-300">Term 4</th>
                   <th className="p-2 border border-gray-300">Final</th>
                   <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (3+4+Fin)</th>
-                  {/* Naya Action Column */}
                   <th className="p-2 border border-gray-300 print:hidden">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {gridData.map((row, idx) => {
-                  const r_t1 = row.marks['Term 1']?.marks_obtained || '-'
-                  const r_t2 = row.marks['Term 2']?.marks_obtained || '-'
-                  const r_hy = row.marks['Half Yearly']?.marks_obtained || '-'
-                  const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-') 
-                    ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy)) 
+                  const r_t1 = row.marks['Term 1']?.marks_obtained ?? '-'
+                  const r_t2 = row.marks['Term 2']?.marks_obtained ?? '-'
+                  const r_hy = row.marks['Half Yearly']?.marks_obtained ?? '-'
+                  const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-')
+                    ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy))
                     : '-'
-                  
-                  const r_t3 = row.marks['Term 3']?.marks_obtained || '-'
-                  const r_t4 = row.marks['Term 4']?.marks_obtained || '-'
-                  const r_fin = row.marks['Final Exam']?.marks_obtained || '-'
-                  const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-') 
-                    ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin)) 
+
+                  const r_t3 = row.marks['Term 3']?.marks_obtained ?? '-'
+                  const r_t4 = row.marks['Term 4']?.marks_obtained ?? '-'
+                  const r_fin = row.marks['Final Exam']?.marks_obtained ?? '-'
+                  const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-')
+                    ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin))
                     : '-'
 
                   return (
@@ -169,15 +173,14 @@ export default function StudentMarks() {
                       <td className="p-2 border border-gray-300">{r_t2}</td>
                       <td className="p-2 border border-gray-300">{r_hy}</td>
                       <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g1}</td>
-                      
+
                       <td className="p-2 border border-gray-300">{r_t3}</td>
                       <td className="p-2 border border-gray-300">{r_t4}</td>
                       <td className="p-2 border border-gray-300">{r_fin}</td>
                       <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g2}</td>
-                      
-                      {/* Delete Button (Print me nahi dikhega) */}
+
                       <td className="p-2 border border-gray-300 print:hidden text-center">
-                        <button 
+                        <button
                           onClick={() => deleteSubject(row.subject)}
                           className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded"
                         >
@@ -188,7 +191,6 @@ export default function StudentMarks() {
                   )
                 })}
               </tbody>
-              {/* Table Footer for Column Totals */}
               <tfoot>
                 <tr className="bg-gray-100 font-bold text-gray-800">
                   <td className="p-2 border border-gray-300 text-left">TOTAL MARKS</td>
@@ -200,7 +202,7 @@ export default function StudentMarks() {
                   <td className="p-2 border border-gray-300">{t4.obt} / {t4.max}</td>
                   <td className="p-2 border border-gray-300">{final.obt} / {final.max}</td>
                   <td className="p-2 border border-gray-300 bg-blue-100 text-primary">{group2Total.obt} / {group2Total.max}</td>
-                  <td className="p-2 border border-gray-300 print:hidden"></td> {/* Empty cell for Action column */}
+                  <td className="p-2 border border-gray-300 print:hidden"></td>
                 </tr>
                 <tr className="bg-gray-100 font-bold text-gray-800">
                   <td className="p-2 border border-gray-300 text-left">PERCENTAGE</td>
@@ -212,7 +214,7 @@ export default function StudentMarks() {
                   <td className="p-2 border border-gray-300">{t4.percent}%</td>
                   <td className="p-2 border border-gray-300">{final.percent}%</td>
                   <td className="p-2 border border-gray-300 bg-blue-200 text-primary">{group2Percent}%</td>
-                  <td className="p-2 border border-gray-300 print:hidden"></td> {/* Empty cell for Action column */}
+                  <td className="p-2 border border-gray-300 print:hidden"></td>
                 </tr>
               </tfoot>
             </table>
