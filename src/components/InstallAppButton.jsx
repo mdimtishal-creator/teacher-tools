@@ -5,29 +5,38 @@ import Button from './ui/Button'
 export default function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showInstructions, setShowInstructions] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
+    // Check karo ki app pehle se install hai ya nahi
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true)
+    }
+
     const handler = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
     }
     window.addEventListener('beforeinstallprompt', handler)
+    
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // Agar browser ne support kiya toh direct prompt kholo
       deferredPrompt.prompt()
       const { outcome } = await deferredPrompt.userChoice
       if (outcome === 'accepted') {
         setDeferredPrompt(null)
+        setIsInstalled(true)
       }
     } else {
-      // Agar direct prompt nahi hai, toh manual instructions dikhao
       setShowInstructions(true)
     }
   }
+
+  // Agar app pehle se install hai, toh button mat dikhao
+  if (isInstalled) return null
 
   return (
     <>
