@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { ArrowLeft, Printer } from 'lucide-react'
+import Button from '../../components/ui/Button'
+import ReportCardDocument from '../../components/domain/ReportCardDocument'
 
 export default function StudentMarks() {
   const { studentId } = useParams()
@@ -8,7 +11,7 @@ export default function StudentMarks() {
   
   const [student, setStudent] = useState(null)
   const [marks, setMarks] = useState([])
-  const [schoolInfo, setSchoolInfo] = useState(null) // 👈 School details ke liye
+  const [schoolInfo, setSchoolInfo] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,23 +24,25 @@ export default function StudentMarks() {
     // 1. Student fetch karo
     const { data: sData, error: sError } = await supabase
       .from('students')
-      .select('*')
+      .select('*, classes(class_name)')
       .eq('id', studentId)
       .single()
       
-    if (sError) console.error('Student fetch error:', sError.message)
-    if (sData) setStudent(sData)
+    if (sData) {
+      setStudent({
+        ...sData,
+        class_name: sData.classes?.class_name || ''
+      })
+    }
 
     // 2. Marks fetch karo
-    const { data: mData, error: mError } = await supabase
+    const { data: mData } = await supabase
       .from('marks')
       .select('*')
       .eq('student_id', studentId)
-      
-    if (mError) console.error('Marks fetch error:', mError.message)
     if (mData) setMarks(mData)
 
-    // 3. School Settings fetch karo (Teacher ID ke hisaab se)
+    // 3. School Settings fetch karo
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       const { data: settingsData } = await supabase
@@ -52,25 +57,14 @@ export default function StudentMarks() {
     setLoading(false)
   }
 
-  const deleteSubject = async (subjectName) => {
-    if (!window.confirm(`Are you sure you want to delete all marks for ${subjectName}?`)) return
-
-    const { error } = await supabase
-      .from('marks')
-      .delete()
-      .eq('student_id', studentId)
-      .eq('subject', subjectName)
-
-    if (error) {
-      alert("Error deleting: " + error.message)
-    } else {
-      fetchData() 
-    }
+  if (loading) {
+    return <div className="p-10 flex justify-center"><div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div></div>
+  }
+  if (!student) {
+    return <div className="p-10 text-center text-text-muted">Student not found</div>
   }
 
-  if (loading) return <div className="p-10 text-center">Loading Marksheet...</div>
-  if (!student) return <div className="p-10 text-center">Student not found</div>
-
+  // --- Calculations (BILKUL SAME AS BEFORE) ---
   const uniqueSubjects = [...new Set(marks.map(m => m.subject))]
   const examsList = ['Term 1', 'Term 2', 'Half Yearly', 'Term 3', 'Term 4', 'Final Exam']
   
@@ -118,174 +112,46 @@ export default function StudentMarks() {
     if (percent >= 50) return 'D'
     return 'F'
   }
+  // ------------------------------------------
+
+  const totals = {
+    t1, t2, hy, t3, t4, final, 
+    group1Total, group1Percent, 
+    group2Total, group2Percent, 
+    overallTotal, overallPercent
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      <nav className="bg-white shadow-sm py-4 px-6 flex justify-between items-center print:hidden">
-        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-dark font-medium">← Back</button>
-        <button onClick={() => window.print()} className="bg-primary text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm">
-          🖨️ Print / Save PDF
-        </button>
-      </nav>
-
-      <main className="max-w-5xl mx-auto p-4 md:p-6 mt-6">
-        <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0">
+    <div className="pb-20 print:pb-0">
+      
+      {/* Screen Header & Actions (Print mein nahi dikhega) */}
+      <div className="bg-white border-b border-border sticky top-0 z-30 shadow-sm print:hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="inline-flex items-center gap-2 text-sm font-medium text-text-muted hover:text-dark transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
           
-          {/* SCHOOL HEADER (Logo, Name) */}
-          <div className="text-center border-b-2 border-gray-800 pb-4 mb-6 flex flex-col items-center">
-            {schoolInfo?.school_logo_url && (
-              <img 
-                src={schoolInfo.school_logo_url} 
-                alt="School Logo" 
-                className="h-16 md:h-20 object-contain mb-2" 
-                onError={(e) => e.target.style.display = 'none'} 
-              />
-            )}
-            <h1 className="text-3xl font-extrabold text-dark uppercase tracking-wide">
-              {schoolInfo?.school_name || 'Student Report Card'}
-            </h1>
-            <p className="text-gray-500 text-sm mt-1 font-medium">Student Report Card</p>
-          </div>
-
-          {/* Student Info */}
-          <div className="flex flex-col md:flex-row justify-between mb-6 gap-4 bg-gray-50 p-4 rounded-lg print:bg-white print:p-0">
-            <div>
-              <p className="text-lg"><span className="font-bold text-gray-700">Name:</span> <span className="font-semibold text-primary">{student.student_name}</span></p>
-              <p className="text-md mt-1"><span className="font-bold text-gray-700">Roll No:</span> {student.roll_number || 'N/A'}</p>
-            </div>
-            <div className="md:text-right">
-              <p className="text-md"><span className="font-bold text-gray-700">Date:</span> {new Date().toLocaleDateString('en-GB')}</p>
-            </div>
-          </div>
-
-          {/* MARKS TABLE */}
-          <div className="overflow-x-auto mb-8">
-            <table className="w-full text-center border-collapse text-sm">
-              <thead>
-                <tr className="bg-gray-800 text-white print:bg-gray-200 print:text-black">
-                  <th className="p-2 border border-gray-300 text-left">Subject</th>
-                  <th className="p-2 border border-gray-300">Term 1</th>
-                  <th className="p-2 border border-gray-300">Term 2</th>
-                  <th className="p-2 border border-gray-300">Half Yearly</th>
-                  <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (1+2+HY)</th>
-                  <th className="p-2 border border-gray-300">Term 3</th>
-                  <th className="p-2 border border-gray-300">Term 4</th>
-                  <th className="p-2 border border-gray-300">Final</th>
-                  <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (3+4+Fin)</th>
-                  <th className="p-2 border border-gray-300 print:hidden">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gridData.map((row, idx) => {
-                  const r_t1 = row.marks['Term 1']?.marks_obtained ?? '-'
-                  const r_t2 = row.marks['Term 2']?.marks_obtained ?? '-'
-                  const r_hy = row.marks['Half Yearly']?.marks_obtained ?? '-'
-                  const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-') 
-                    ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy)) 
-                    : '-'
-                  
-                  const r_t3 = row.marks['Term 3']?.marks_obtained ?? '-'
-                  const r_t4 = row.marks['Term 4']?.marks_obtained ?? '-'
-                  const r_fin = row.marks['Final Exam']?.marks_obtained ?? '-'
-                  const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-') 
-                    ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin)) 
-                    : '-'
-
-                  return (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="p-2 border border-gray-300 text-left font-bold text-gray-700 uppercase">{row.subject}</td>
-                      <td className="p-2 border border-gray-300">{r_t1}</td>
-                      <td className="p-2 border border-gray-300">{r_t2}</td>
-                      <td className="p-2 border border-gray-300">{r_hy}</td>
-                      <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g1}</td>
-                      
-                      <td className="p-2 border border-gray-300">{r_t3}</td>
-                      <td className="p-2 border border-gray-300">{r_t4}</td>
-                      <td className="p-2 border border-gray-300">{r_fin}</td>
-                      <td className="p-2 border border-gray-300 font-bold bg-gray-50">{r_g2}</td>
-                      
-                      <td className="p-2 border border-gray-300 print:hidden text-center">
-                        <button 
-                          onClick={() => deleteSubject(row.subject)}
-                          className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-                
-                {gridData.length === 0 && (
-                  <tr>
-                    <td colSpan="10" className="p-8 text-center text-gray-500 italic">
-                      Is student ki abhi tak koi marks save nahi hui hai.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-100 font-bold text-gray-800">
-                  <td className="p-2 border border-gray-300 text-left">TOTAL MARKS</td>
-                  <td className="p-2 border border-gray-300">{t1.obt} / {t1.max}</td>
-                  <td className="p-2 border border-gray-300">{t2.obt} / {t2.max}</td>
-                  <td className="p-2 border border-gray-300">{hy.obt} / {hy.max}</td>
-                  <td className="p-2 border border-gray-300 bg-blue-100 text-primary">{group1Total.obt} / {group1Total.max}</td>
-                  <td className="p-2 border border-gray-300">{t3.obt} / {t3.max}</td>
-                  <td className="p-2 border border-gray-300">{t4.obt} / {t4.max}</td>
-                  <td className="p-2 border border-gray-300">{final.obt} / {final.max}</td>
-                  <td className="p-2 border border-gray-300 bg-blue-100 text-primary">{group2Total.obt} / {group2Total.max}</td>
-                  <td className="p-2 border border-gray-300 print:hidden"></td>
-                </tr>
-                <tr className="bg-gray-100 font-bold text-gray-800">
-                  <td className="p-2 border border-gray-300 text-left">PERCENTAGE</td>
-                  <td className="p-2 border border-gray-300">{t1.percent}%</td>
-                  <td className="p-2 border border-gray-300">{t2.percent}%</td>
-                  <td className="p-2 border border-gray-300">{hy.percent}%</td>
-                  <td className="p-2 border border-gray-300 bg-blue-200 text-primary">{group1Percent}%</td>
-                  <td className="p-2 border border-gray-300">{t3.percent}%</td>
-                  <td className="p-2 border border-gray-300">{t4.percent}%</td>
-                  <td className="p-2 border border-gray-300">{final.percent}%</td>
-                  <td className="p-2 border border-gray-300 bg-blue-200 text-primary">{group2Percent}%</td>
-                  <td className="p-2 border border-gray-300 print:hidden"></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          {/* OVERALL RESULT & SIGNATURE */}
-          <div className="flex flex-col md:flex-row justify-between items-end mt-12 gap-8">
-            
-            {/* Principal Signature (Left side) */}
-            <div className="text-center w-48">
-              <div className="border-t border-gray-400 mb-2"></div>
-              <p className="font-bold text-gray-800 text-sm uppercase">
-                {schoolInfo?.principal_name || 'Principal'}
-              </p>
-              <p className="text-xs text-gray-500">Principal Signature</p>
-            </div>
-
-            {/* Overall Result Box (Right side) */}
-            <div className="border-2 border-primary rounded-xl p-6 w-full md:w-80 bg-blue-50 print:bg-white">
-              <h3 className="text-center font-bold text-lg mb-3 border-b border-blue-200 pb-2 text-primary">Overall Result</h3>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600 font-medium">Grand Total:</span>
-                <span className="font-bold text-dark">{overallTotal.obt} / {overallTotal.max}</span>
-              </div>
-              <div className="flex justify-between mb-2 border-b border-blue-200 pb-2">
-                <span className="text-gray-600 font-medium">Overall %:</span>
-                <span className="font-bold text-primary">{overallPercent}%</span>
-              </div>
-              <div className="flex justify-between mt-2 items-center">
-                <span className="text-gray-600 font-bold uppercase">Final Grade:</span>
-                <span className="font-extrabold text-2xl text-dark bg-white px-3 py-1 rounded shadow-sm print:shadow-none print:border">{getGrade(overallPercent)}</span>
-              </div>
-            </div>
-
-          </div>
-
+          <Button onClick={() => window.print()} className="bg-dark hover:bg-gray-800">
+            <Printer className="w-4 h-4" /> Print / Save as PDF
+          </Button>
         </div>
-      </main>
+      </div>
+
+      {/* Main Document Area */}
+      <div className="max-w-[210mm] mx-auto mt-6 print:mt-0 print:max-w-none">
+        <ReportCardDocument 
+          student={student} 
+          schoolInfo={schoolInfo} 
+          marks={marks} 
+          gridData={gridData} 
+          totals={totals} 
+          getGrade={getGrade} 
+        />
+      </div>
+
     </div>
   )
 }
