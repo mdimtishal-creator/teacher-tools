@@ -7,7 +7,7 @@ import Button from '../components/ui/Button'
 export default function Login() {
   const navigate = useNavigate()
   
-  // 'signin' | 'signup' | 'verify_otp' | 'forgot' | 'reset'
+  // Views: 'signin' | 'signup' | 'verify_otp' | 'forgot' | 'reset'
   const [view, setView] = useState('signin') 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -15,48 +15,39 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
-  // 1. SIGN IN (Email + Password)
-  const handleSignIn = async (e) => {
-    e.preventDefault()
-    setLoading(true); setMessage({ type: '', text: '' })
-    
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setMessage({ type: 'error', text: error.message })
-    else navigate('/dashboard')
-    
-    setLoading(false)
-  }
-
-  // 2. SIGN UP (Account banega, phir OTP verification hoga)
+  // 1. SIGN UP (Account banega, phir OTP verification hoga)
   const handleSignUp = async (e) => {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
     
+    // User ko email + password se create karo
     const { error } = await supabase.auth.signUp({ 
       email, 
-      password,
-      options: { shouldCreateUser: true }
+      password 
     })
     
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      // Account ban gaya, ab OTP bhejte hain verification ke liye
-      await supabase.auth.signInWithOtp({ email })
-      setMessage({ type: 'success', text: 'Verification code sent to your email.' })
+      // Account ban gaya, ab OTP verify karne ka screen dikhao
+      setMessage({ type: 'success', text: 'Account created! Check your email for the verification code.' })
       setView('verify_otp')
     }
     setLoading(false)
   }
 
-  // 3. VERIFY OTP (Sign up ke baad)
+  // 2. VERIFY OTP (Sign up ke baad verify karna)
   const handleVerifyOtp = async (e) => {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
     
-    // FIX: Yahan 'signup' use karna hai
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'signup' })
+    const { error } = await supabase.auth.verifyOtp({ 
+      email, 
+      token: otp, 
+      type: 'signup' 
+    })
     
     if (error) {
       setMessage({ type: 'error', text: error.message })
@@ -67,7 +58,23 @@ export default function Login() {
     setLoading(false)
   }
 
-  // 4. FORGOT PASSWORD (Email par reset code/link bhejna)
+  // 3. SIGN IN (Normal Email + Password)
+  const handleSignIn = async (e) => {
+    e.preventDefault()
+    setLoading(true); setMessage({ type: '', text: '' })
+    
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    
+    if (error) {
+      setMessage({ type: 'error', text: error.message })
+    } else {
+      // Login successful. Supabase session khud manage karega.
+      navigate('/dashboard')
+    }
+    setLoading(false)
+  }
+
+  // 4. FORGOT PASSWORD (Email par reset code bhejna)
   const handleForgot = async (e) => {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
@@ -88,22 +95,28 @@ export default function Login() {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
     
-    // FIX: Yahan 'recovery' use karna hai
-    const { error } = await supabase.auth.verifyOtp({ 
+    // Pehle OTP verify karo
+    const { error: verifyError } = await supabase.auth.verifyOtp({ 
       email, 
       token: otp, 
       type: 'recovery' 
-    }).then(async ({ error }) => {
-      if (error) return { error }
-      // Agar OTP sahi hai, toh password update karo
-      return await supabase.auth.updateUser({ password })
     })
 
-    if (error) {
-      setMessage({ type: 'error', text: error.message })
+    if (verifyError) {
+      setMessage({ type: 'error', text: verifyError.message })
+      setLoading(false)
+      return
+    }
+
+    // Agar OTP sahi hai, toh naya password set karo
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+
+    if (updateError) {
+      setMessage({ type: 'error', text: updateError.message })
     } else {
-      setMessage({ type: 'success', text: 'Password updated! You can now sign in.' })
+      setMessage({ type: 'success', text: 'Password updated successfully! Please sign in.' })
       setView('signin')
+      setPassword('') // Purana password clear karo
     }
     setLoading(false)
   }
@@ -138,7 +151,7 @@ export default function Login() {
               {view === 'signup' && 'Create your account'}
               {view === 'verify_otp' && 'Verify your email'}
               {view === 'forgot' && 'Forgot password?'}
-              {view === 'reset' && 'Reset password'}
+              {view === 'reset' && 'Set new password'}
             </h2>
             <p className="mt-2 text-text-muted">
               {view === 'signin' && 'Sign in to continue to your dashboard.'}
@@ -171,7 +184,7 @@ export default function Login() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-sm font-medium text-dark">Password</label>
-                  <button type="button" onClick={() => setView('forgot')} className="text-sm font-semibold text-primary-600 hover:text-primary-700">Forgot?</button>
+                  <button type="button" onClick={() => { setView('forgot'); setMessage({type:'', text:''}) }} className="text-sm font-semibold text-primary-600 hover:text-primary-700">Forgot?</button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
@@ -199,7 +212,7 @@ export default function Login() {
                 <label className="block text-sm font-medium text-dark mb-1.5">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
-                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="Create a password" />
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="Create a strong password" />
                 </div>
               </div>
               <Button type="submit" loading={loading} className="w-full py-3 text-base">Create account</Button>
@@ -209,14 +222,13 @@ export default function Login() {
             </form>
           )}
 
-          {/* VERIFY OTP FORM */}
+          {/* VERIFY OTP FORM (Signup ke baad) */}
           {view === 'verify_otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-dark mb-1.5">Verification Code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
-                  {/* FIX: maxLength 8 kar diya hai */}
                   <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={8} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-center tracking-widest text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="12345678" />
                 </div>
               </div>
@@ -235,7 +247,7 @@ export default function Login() {
                 </div>
               </div>
               <Button type="submit" loading={loading} className="w-full py-3 text-base">Send Reset Code</Button>
-              <button type="button" onClick={() => setView('signin')} className="w-full text-center text-sm font-medium text-text-muted hover:text-dark flex items-center justify-center gap-2">
+              <button type="button" onClick={() => { setView('signin'); setMessage({type:'', text:''}) }} className="w-full text-center text-sm font-medium text-text-muted hover:text-dark flex items-center justify-center gap-2">
                 <ArrowLeft className="w-4 h-4" /> Back to sign in
               </button>
             </form>
@@ -255,7 +267,7 @@ export default function Login() {
                 <label className="block text-sm font-medium text-dark mb-1.5">New Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
-                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="New password" />
+                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="New strong password" />
                 </div>
               </div>
               <Button type="submit" loading={loading} className="w-full py-3 text-base">Update Password</Button>
