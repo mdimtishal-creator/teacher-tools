@@ -16,7 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
 
-  // 1. SIGN IN
+  // 1. SIGN IN (Email + Password)
   const handleSignIn = async (e) => {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
@@ -55,7 +55,8 @@ export default function Login() {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
     
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
+    // FIX: Yahan 'signup' use karna hai
+    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'signup' })
     
     if (error) {
       setMessage({ type: 'error', text: error.message })
@@ -76,7 +77,7 @@ export default function Login() {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      setMessage({ type: 'success', text: 'Password reset link sent to your email.' })
+      setMessage({ type: 'success', text: 'Password reset code sent to your email.' })
       setView('reset')
     }
     setLoading(false)
@@ -87,7 +88,7 @@ export default function Login() {
     e.preventDefault()
     setLoading(true); setMessage({ type: '', text: '' })
     
-    // Isme OTP code aur naya password dono lagta hai (Secure tarika)
+    // FIX: Yahan 'recovery' use karna hai
     const { error } = await supabase.auth.verifyOtp({ 
       email, 
       token: otp, 
@@ -212,10 +213,11 @@ export default function Login() {
           {view === 'verify_otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-dark mb-1.5">6-digit Code</label>
+                <label className="block text-sm font-medium text-dark mb-1.5">Verification Code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
-                  <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-center tracking-widest text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="123456" />
+                  {/* FIX: maxLength 8 kar diya hai */}
+                  <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={8} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-center tracking-widest text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="12345678" />
                 </div>
               </div>
               <Button type="submit" loading={loading} className="w-full py-3 text-base">Verify Email</Button>
@@ -243,10 +245,10 @@ export default function Login() {
           {view === 'reset' && (
             <form onSubmit={handleResetPassword} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-dark mb-1.5">6-digit Code</label>
+                <label className="block text-sm font-medium text-dark mb-1.5">Verification Code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-3.5 w-5 h-5 text-text-subtle" />
-                  <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-center tracking-widest text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="123456" />
+                  <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={8} className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-center tracking-widest text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="12345678" />
                 </div>
               </div>
               <div>
