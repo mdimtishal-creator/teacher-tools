@@ -24,14 +24,25 @@ export default function StudentMarks() {
     // 1. Student fetch karo
     const { data: sData, error: sError } = await supabase
       .from('students')
-      .select('*, classes(class_name)')
+      .select('*')
       .eq('id', studentId)
       .single()
       
     if (sData) {
+      let className = ''
+      // Student ki class_id se class ka naam nikaalo
+      if (sData.class_id) {
+        const { data: cData } = await supabase
+          .from('classes')
+          .select('class_name')
+          .eq('id', sData.class_id)
+          .single()
+        if (cData) className = cData.class_name
+      }
+      
       setStudent({
         ...sData,
-        class_name: sData.classes?.class_name || ''
+        class_name: className
       })
     }
 
