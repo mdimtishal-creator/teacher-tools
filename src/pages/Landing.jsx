@@ -298,7 +298,7 @@ export default function Landing() {
 
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
-                href="https://wa.me/919876543210"
+                href="https://wa.me/918318284984"
                 target="_blank"
                 rel="noreferrer"
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#20bd5a] sm:w-auto"
@@ -331,7 +331,7 @@ export default function Landing() {
 
       {/* Floating WhatsApp */}
       <a
-        href="https://wa.me/919876543210"
+        href="https://wa.me/918318284984"
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition hover:scale-105 hover:bg-[#20bd5a] sm:bottom-6 sm:right-6 sm:h-16 sm:w-16"
