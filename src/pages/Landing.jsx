@@ -96,10 +96,10 @@ export default function Landing() {
           <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
             <GraduationCap className="w-8 h-8 text-primary-600" />
           </div>
-          <h2 className="text-2xl font-bold text-dark mb-4">Built by a Teacher, for Teachers</h2>
-          <p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
-            I built Teacher Tools to solve a simple problem: teachers spend hours doing manual calculations and writing report cards. My goal is to make your life easier so you can focus on teaching, not paperwork. This tool is 100% free for every school.
-          </p>
+          <h2 className="text-2xl font-bold text-dark mb-4">Why I Built Teacher Tools</h2>
+<p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
+  As a developer and tech enthusiast, I saw how much time teachers spend on manual calculations and writing report cards. I built this tool to solve that exact problem. My goal is to make school management effortless so educators can focus on what matters most: teaching. This tool is 100% free for every school.
+</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
               href="https://wa.me/918318284984" 
