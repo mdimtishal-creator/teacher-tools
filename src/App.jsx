@@ -3,6 +3,8 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import DashboardLayout from './components/layout/DashboardLayout'
 import NotFound from './routes/NotFound'
 
+// Pages
+import Landing from './pages/Landing' // <-- Naya Import
 import Login from './pages/Login'
 import DashboardHome from './pages/dashboard/DashboardHome'
 import Classes from './pages/dashboard/Classes'
@@ -17,8 +19,8 @@ import Settings from './pages/dashboard/Settings'
 function App() {
   return (
     <Routes>
-      {/* Auth */}
-      <Route path="/" element={<Login />} />
+      {/* Public Routes */}
+      <Route path="/" element={<Landing />} /> {/* <-- Yahan change kiya */}
       <Route path="/login" element={<Login />} />
 
       {/* Protected Dashboard Routes */}
