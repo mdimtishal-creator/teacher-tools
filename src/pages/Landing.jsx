@@ -102,7 +102,7 @@ export default function Landing() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
-              href="https://wa.me/919876543210" 
+              href="https://wa.me/918318284984" 
               target="_blank" 
               rel="noreferrer"
               className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20bd5a] transition shadow-sm w-full sm:w-auto justify-center"
