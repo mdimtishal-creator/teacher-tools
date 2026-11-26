@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { GraduationCap, FileText, ShieldCheck, Zap, ArrowRight, MessageCircle, Heart, Mail } from 'lucide-react'
 import Button from '../components/ui/Button'
+import InstallAppButton from '../components/InstallAppButton' // Install Button Import
 
 export default function Landing() {
   return (
@@ -27,7 +28,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <div className="relative pt-32 pb-20 sm:pt-40 sm:pb-24 overflow-hidden">
+      <div className="relative pt-32 pb-16 sm:pt-40 sm:pb-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary-50/50 to-transparent"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           
@@ -43,7 +44,7 @@ export default function Landing() {
             Say goodbye to manual calculations. Create classes, enter marks, and generate beautiful, print-ready A4 report cards in seconds. 100% free.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link to="/login">
               <Button size="lg" className="w-full sm:w-auto text-lg px-8">
                 Start for Free <ArrowRight className="w-5 h-5 ml-2" />
@@ -51,6 +52,12 @@ export default function Landing() {
             </Link>
             <p className="text-sm text-text-muted mt-4 sm:mt-0 sm:ml-4">No credit card required.</p>
           </div>
+
+          {/* INSTALL APP BUTTON (Yahan laga diya hai) */}
+          <div className="max-w-md mx-auto">
+            <InstallAppButton />
+          </div>
+
         </div>
       </div>
 
@@ -90,19 +97,20 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* ABOUT THE CREATOR SECTION */}
+      {/* ABOUT THE DEVELOPER SECTION */}
       <div className="py-24 bg-surface-muted border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
             <GraduationCap className="w-8 h-8 text-primary-600" />
           </div>
           <h2 className="text-2xl font-bold text-dark mb-4">Why I Built Teacher Tools</h2>
-<p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
-  As a developer and tech enthusiast, I saw how much time teachers spend on manual calculations and writing report cards. I built this tool to solve that exact problem. My goal is to make school management effortless so educators can focus on what matters most: teaching. This tool is 100% free for every school.
-</p>
+          <p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
+            As a developer, I saw how much time teachers spend on manual calculations and writing report cards. I built this tool to solve that exact problem. My goal is to make school management effortless so educators can focus on what matters most — teaching. This tool is 100% free for every school.
+          </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* APNA WHATSAPP NUMBER YAHAN DALEIN (91 ke saath) */}
             <a 
-              href="https://wa.me/918318284984" 
+              href="https://wa.me/919876543210" 
               target="_blank" 
               rel="noreferrer"
               className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20bd5a] transition shadow-sm w-full sm:w-auto justify-center"
@@ -127,7 +135,7 @@ export default function Landing() {
 
       {/* Floating WhatsApp Button */}
       <a 
-        href="https://wa.me/918318284984" 
+        href="https://wa.me/919876543210" 
         target="_blank" 
         rel="noreferrer"
         className="fixed bottom-6 right-6 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition z-50 flex items-center justify-center"
