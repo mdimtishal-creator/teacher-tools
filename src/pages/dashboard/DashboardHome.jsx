@@ -5,7 +5,6 @@ import {
   Users, BookOpen, FileText, Settings, 
   GraduationCap, ArrowRight, Activity, CheckCircle2 
 } from 'lucide-react'
-import InstallAppButton from '../../components/InstallAppButton' // 👈 Ye nayi line add hui hai
 
 export default function DashboardHome() {
   const [user, setUser] = useState(null)
@@ -40,7 +39,6 @@ export default function DashboardHome() {
     fetchData()
   }, [])
 
-  // User ke email se naam nikaalna (e.g., "rahul@gmail.com" -> "Rahul")
   const userName = user?.email ? user.email.split('@')[0] : 'Teacher'
   const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
 
@@ -61,9 +59,6 @@ export default function DashboardHome() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
       
-      {/* Install App Button - Ye sirf tab dikhega jab install ho sakta ho */}
-      <InstallAppButton /> 
-
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-8 md:p-10 text-white shadow-md relative overflow-hidden">
         <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
