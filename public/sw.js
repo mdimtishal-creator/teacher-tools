@@ -1,4 +1,7 @@
-// Ye file browser ko batati hai ki app installable hai
 self.addEventListener('fetch', function(event) {
-  // Abhi ke liye khaali chhod rahe hain, future me offline cache yahan aayega
+  // Ye Chrome ko batata hai ki hum network requests handle kar sakte hain
+  // Abhi ke liye hum bas requests ko normal jaane de rahe hain
+  event.respondWith(fetch(event.request).catch(function() {
+    return caches.match(event.request);
+  }));
 });
