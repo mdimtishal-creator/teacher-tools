@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GraduationCap, FileText, CheckCircle2, ShieldCheck, Zap, ArrowRight, MessageCircle, Heart, Mail } from 'lucide-react'
+import { GraduationCap, FileText, ShieldCheck, Zap, ArrowRight, MessageCircle, Heart, Mail } from 'lucide-react'
 import Button from '../components/ui/Button'
 
 export default function Landing() {
@@ -90,32 +90,52 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* ABOUT THE CREATOR SECTION (Updated without Photo) */}
-<div className="py-24 bg-surface-muted border-t border-border">
-  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-      <GraduationCap className="w-8 h-8 text-primary-600" />
-    </div>
-    <h2 className="text-2xl font-bold text-dark mb-4">Built by a Teacher, for Teachers</h2>
-    <p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
-      I built Teacher Tools to solve a simple problem: teachers spend hours doing manual calculations and writing report cards. My goal is to make your life easier so you can focus on teaching, not paperwork. This tool is 100% free for every school.
-    </p>
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-      {/* Yahan apna WhatsApp number dalna (91 ke saath) */}
+      {/* ABOUT THE CREATOR SECTION */}
+      <div className="py-24 bg-surface-muted border-t border-border">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <GraduationCap className="w-8 h-8 text-primary-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-dark mb-4">Built by a Teacher, for Teachers</h2>
+          <p className="text-lg text-text-muted leading-relaxed mb-8 max-w-2xl mx-auto">
+            I built Teacher Tools to solve a simple problem: teachers spend hours doing manual calculations and writing report cards. My goal is to make your life easier so you can focus on teaching, not paperwork. This tool is 100% free for every school.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a 
+              href="https://wa.me/919876543210" 
+              target="_blank" 
+              rel="noreferrer"
+              className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20bd5a] transition shadow-sm w-full sm:w-auto justify-center"
+            >
+              <MessageCircle className="w-5 h-5" /> Chat on WhatsApp
+            </a>
+            <a 
+              href="mailto:info.schoolsetup@gmail.com" 
+              className="flex items-center gap-2 bg-white border border-border text-dark px-6 py-3 rounded-lg font-semibold hover:bg-surface-hover transition shadow-sm w-full sm:w-auto justify-center"
+            >
+              <Mail className="w-5 h-5" /> Email Support
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="py-10 border-t border-border text-center text-text-muted flex flex-col items-center justify-center">
+        <p className="flex items-center gap-1">Made with <Heart className="w-4 h-4 text-red-500" /> for Indian Teachers</p>
+        <p className="mt-2 text-sm">© {new Date().getFullYear()} Teacher Tools. All rights reserved.</p>
+      </footer>
+
+      {/* Floating WhatsApp Button */}
       <a 
-        href="https://wa.me/918318284984" // <-- YAHAN APNA NUMBER DAALEIN
+        href="https://wa.me/918318284984" 
         target="_blank" 
         rel="noreferrer"
-        className="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#20bd5a] transition shadow-sm w-full sm:w-auto justify-center"
+        className="fixed bottom-6 right-6 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition z-50 flex items-center justify-center"
+        title="Contact Developer"
       >
-        <MessageCircle className="w-5 h-5" /> Chat on WhatsApp
+        <MessageCircle className="w-7 h-7" />
       </a>
-      <a 
-        href="mailto:info.schoolsetup@gmail.com" 
-        className="flex items-center gap-2 bg-white border border-border text-dark px-6 py-3 rounded-lg font-semibold hover:bg-surface-hover transition shadow-sm w-full sm:w-auto justify-center"
-      >
-        <Mail className="w-5 h-5" /> Email Support
-      </a>
+
     </div>
-  </div>
-</div>
+  )
+}
