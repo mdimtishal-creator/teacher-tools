@@ -1,149 +1,544 @@
-export default function ReportCardDocument({ student, schoolInfo, marks, gridData, totals, getGrade }) {
-  const { t1, t2, hy, t3, t4, final, group1Total, group1Percent, group2Total, group2Percent, overallTotal, overallPercent } = totals
+
+export default function ReportCardDocument({
+  student,
+  schoolInfo,
+  marks,
+  gridData,
+  totals,
+  getGrade
+}) {
+  const {
+    t1, t2, hy, t3, t4, final,
+    group1Total, group1Percent,
+    group2Total, group2Percent,
+    overallTotal, overallPercent
+  } = totals
+
+  const exams = [
+    'Term 1',
+    'Term 2',
+    'Half Yearly',
+    'Term 3',
+    'Term 4',
+    'Final Exam'
+  ]
+
+  const getMarks = (row, exam) =>
+    row.marks?.[exam]?.marks_obtained ?? '-'
+
+  const getGroupTotal = (row, examNames) => {
+    const values = examNames.map(exam => getMarks(row, exam))
+    if (values.every(value => value === '-')) return '-'
+
+    return values.reduce(
+      (sum, value) => sum + (value === '-' ? 0 : Number(value)),
+      0
+    )
+  }
+
+  const grade = getGrade(Number(overallPercent))
 
   return (
-    <div className="bg-white p-8 md:p-12 rounded-xl shadow-lg border border-border print:shadow-none print:border-none print:p-0 print:m-0 max-w-[210mm] mx-auto">
-      
-      {/* School Header */}
-      <div className="text-center border-b-2 border-gray-800 pb-6 mb-6 flex flex-col items-center">
-        {schoolInfo?.school_logo_url && (
-          <img 
-            src={schoolInfo.school_logo_url} 
-            alt="School Logo" 
-            className="h-20 object-contain mb-3" 
-            onError={(e) => e.target.style.display = 'none'} 
-          />
-        )}
-        <h1 className="text-3xl font-extrabold text-dark uppercase tracking-wide">
-          {schoolInfo?.school_name || 'Student Report Card'}
-        </h1>
-        <p className="text-gray-600 text-sm mt-2 font-medium tracking-widest uppercase">Student Report Card</p>
-      </div>
+    <>
+      <style>{`
+        .report-sheet {
+          width: 100%;
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 25px;
+          background: #fff;
+          color: #172033;
+          font-family: Arial, Helvetica, sans-serif;
+          box-sizing: border-box;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+        }
 
-      {/* Student Info */}
-      <div className="flex flex-col md:flex-row justify-between mb-8 gap-4 bg-gray-50 p-4 rounded-lg print:bg-transparent print:p-0 print:border-b print:border-gray-300 print:pb-4 print:mb-4">
-        <div className="space-y-1">
-          <p className="text-lg"><span className="font-bold text-gray-700 w-24 inline-block">Name:</span> <span className="font-bold text-dark text-xl uppercase">{student.student_name}</span></p>
-          <p className="text-md"><span className="font-bold text-gray-700 w-24 inline-block">Roll No:</span> <span className="font-semibold text-gray-800">{student.roll_number || 'N/A'}</span></p>
-        </div>
-        <div className="md:text-right space-y-1">
-          <p className="text-md"><span className="font-bold text-gray-700">Date:</span> {new Date().toLocaleDateString('en-GB')}</p>
-          <p className="text-md"><span className="font-bold text-gray-700">Class:</span> {student.class_name || 'N/A'}</p>
-        </div>
-      </div>
+        .report-sheet * {
+          box-sizing: border-box;
+        }
 
-      {/* MARKS TABLE */}
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-center border-collapse text-sm">
-          <thead>
-            <tr className="bg-gray-800 text-white print:bg-gray-200 print:text-black">
-              <th className="p-2 border border-gray-300 text-left w-32">Subject</th>
-              <th className="p-2 border border-gray-300">Term 1</th>
-              <th className="p-2 border border-gray-300">Term 2</th>
-              <th className="p-2 border border-gray-300">Half Yearly</th>
-              <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (1+2+HY)</th>
-              <th className="p-2 border border-gray-300">Term 3</th>
-              <th className="p-2 border border-gray-300">Term 4</th>
-              <th className="p-2 border border-gray-300">Final</th>
-              <th className="p-2 border border-gray-300 bg-gray-700 print:bg-gray-300 font-bold">Total (3+4+Fin)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {gridData.map((row, idx) => {
-              const r_t1 = row.marks['Term 1']?.marks_obtained ?? '-'
-              const r_t2 = row.marks['Term 2']?.marks_obtained ?? '-'
-              const r_hy = row.marks['Half Yearly']?.marks_obtained ?? '-'
-              const r_g1 = (r_t1 !== '-' || r_t2 !== '-' || r_hy !== '-') 
-                ? (Number(r_t1 === '-' ? 0 : r_t1) + Number(r_t2 === '-' ? 0 : r_t2) + Number(r_hy === '-' ? 0 : r_hy)) 
-                : '-'
-              
-              const r_t3 = row.marks['Term 3']?.marks_obtained ?? '-'
-              const r_t4 = row.marks['Term 4']?.marks_obtained ?? '-'
-              const r_fin = row.marks['Final Exam']?.marks_obtained ?? '-'
-              const r_g2 = (r_t3 !== '-' || r_t4 !== '-' || r_fin !== '-') 
-                ? (Number(r_t3 === '-' ? 0 : r_t3) + Number(r_t4 === '-' ? 0 : r_t4) + Number(r_fin === '-' ? 0 : r_fin)) 
-                : '-'
+        .report-top {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 18px;
+          text-align: center;
+          padding-bottom: 14px;
+          border-bottom: 3px solid #243b63;
+        }
 
-              return (
-                <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent">
-                  <td className="p-2 border border-gray-300 text-left font-bold text-gray-800 uppercase">{row.subject}</td>
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_t1}</td>
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_t2}</td>
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_hy}</td>
-                  <td className="p-2 border border-gray-300 font-bold bg-gray-50 print:bg-transparent text-primary-700">{r_g1}</td>
-                  
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_t3}</td>
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_t4}</td>
-                  <td className="p-2 border border-gray-300 text-gray-700">{r_fin}</td>
-                  <td className="p-2 border border-gray-300 font-bold bg-gray-50 print:bg-transparent text-primary-700">{r_g2}</td>
-                </tr>
-              )
-            })}
-            
-            {gridData.length === 0 && (
-              <tr>
-                <td colSpan="9" className="p-8 text-center text-gray-500 italic">
-                  No marks available yet.
-                </td>
-              </tr>
+        .report-logo {
+          width: 76px;
+          height: 76px;
+          object-fit: contain;
+        }
+
+        .report-school-name {
+          font-size: 27px;
+          font-weight: 900;
+          color: #17345e;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin: 0;
+        }
+
+        .report-subtitle {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          color: #64748b;
+          margin-top: 5px;
+          text-transform: uppercase;
+        }
+
+        .report-heading {
+          display: inline-block;
+          margin-top: 12px;
+          padding: 6px 24px;
+          background: #17345e;
+          color: white;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 2px;
+          border-radius: 4px;
+        }
+
+        .report-student-info {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 10px 20px;
+          padding: 13px 16px;
+          margin: 15px 0;
+          background: #f3f6fb;
+          border: 1px solid #dbe3ef;
+          border-radius: 7px;
+        }
+
+        .report-info-item {
+          font-size: 12px;
+          color: #475569;
+        }
+
+        .report-info-item strong {
+          color: #172033;
+          margin-left: 4px;
+        }
+
+        .report-table-wrap {
+          width: 100%;
+          overflow: visible;
+        }
+
+        .report-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        .report-table th,
+        .report-table td {
+          border: 1px solid #cbd5e1;
+          padding: 7px 3px;
+          overflow-wrap: anywhere;
+        }
+
+        .report-table thead tr:first-child th {
+          background: #17345e;
+          color: white;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 9px 3px;
+        }
+
+        .report-table thead tr:nth-child(2) th {
+          background: #e8eef7;
+          color: #17345e;
+          font-size: 9px;
+        }
+
+        .report-table .subject-cell {
+          width: 16%;
+          text-align: left;
+          padding-left: 9px;
+          font-weight: 800;
+          color: #1e293b;
+        }
+
+        .report-table .group-total {
+          background: #edf3fc;
+          color: #17345e;
+          font-weight: 800;
+        }
+
+        .report-table tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+
+        .report-table tfoot td {
+          background: #e8eef7;
+          font-weight: 800;
+          color: #17345e;
+        }
+
+        .report-summary {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 12px;
+          margin-top: 15px;
+        }
+
+        .report-summary-card {
+          border: 1px solid #dbe3ef;
+          border-radius: 7px;
+          padding: 11px;
+          text-align: center;
+          background: #f8fafc;
+        }
+
+        .report-summary-card span {
+          display: block;
+          font-size: 10px;
+          color: #64748b;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: .5px;
+        }
+
+        .report-summary-card strong {
+          display: block;
+          margin-top: 5px;
+          font-size: 18px;
+          color: #17345e;
+        }
+
+        .report-grade {
+          background: #17345e;
+          border-color: #17345e;
+        }
+
+        .report-grade span,
+        .report-grade strong {
+          color: white;
+        }
+
+        .report-signatures {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-top: 55px;
+          padding: 0 20px;
+        }
+
+        .report-signature {
+          width: 190px;
+          text-align: center;
+        }
+
+        .report-signature-line {
+          border-top: 1px solid #475569;
+          margin-bottom: 7px;
+        }
+
+        .report-signature strong {
+          display: block;
+          font-size: 11px;
+          color: #172033;
+          text-transform: uppercase;
+        }
+
+        .report-signature span {
+          display: block;
+          font-size: 10px;
+          color: #64748b;
+          margin-top: 3px;
+        }
+
+        .report-footer {
+          text-align: center;
+          font-size: 9px;
+          color: #94a3b8;
+          margin-top: 18px;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 8px;
+        }
+
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 7mm;
+          }
+
+          body {
+            background: white !important;
+            margin: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .report-sheet {
+            width: 100%;
+            max-width: none;
+            padding: 8px;
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+          }
+
+          .report-top {
+            padding-bottom: 8px;
+          }
+
+          .report-logo {
+            width: 58px;
+            height: 58px;
+          }
+
+          .report-school-name {
+            font-size: 22px;
+          }
+
+          .report-heading {
+            margin-top: 7px;
+            padding: 4px 18px;
+          }
+
+          .report-student-info {
+            margin: 9px 0;
+            padding: 8px 12px;
+          }
+
+          .report-table th,
+          .report-table td {
+            padding: 5px 2px;
+          }
+
+          .report-summary {
+            margin-top: 9px;
+            gap: 8px;
+          }
+
+          .report-summary-card {
+            padding: 7px;
+          }
+
+          .report-summary-card strong {
+            font-size: 15px;
+          }
+
+          .report-signatures {
+            margin-top: 35px;
+          }
+
+          .report-footer {
+            margin-top: 10px;
+          }
+        }
+      `}</style>
+
+      <div className="report-sheet">
+
+        {/* SCHOOL HEADER */}
+        <div className="report-top">
+          {schoolInfo?.school_logo_url && (
+            <img
+              src={schoolInfo.school_logo_url}
+              alt="School Logo"
+              className="report-logo"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+
+          <div>
+            <h1 className="report-school-name">
+              {schoolInfo?.school_name || 'School Name'}
+            </h1>
+
+            {schoolInfo?.school_address && (
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                {schoolInfo.school_address}
+              </div>
             )}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-100 font-bold text-gray-800 print:bg-transparent">
-              <td className="p-2 border border-gray-300 text-left">TOTAL MARKS</td>
-              <td className="p-2 border border-gray-300">{t1.obt} / {t1.max}</td>
-              <td className="p-2 border border-gray-300">{t2.obt} / {t2.max}</td>
-              <td className="p-2 border border-gray-300">{hy.obt} / {hy.max}</td>
-              <td className="p-2 border border-gray-300 bg-blue-100 text-primary-800 print:bg-gray-200 print:text-black">{group1Total.obt} / {group1Total.max}</td>
-              <td className="p-2 border border-gray-300">{t3.obt} / {t3.max}</td>
-              <td className="p-2 border border-gray-300">{t4.obt} / {t4.max}</td>
-              <td className="p-2 border border-gray-300">{final.obt} / {final.max}</td>
-              <td className="p-2 border border-gray-300 bg-blue-100 text-primary-800 print:bg-gray-200 print:text-black">{group2Total.obt} / {group2Total.max}</td>
-            </tr>
-            <tr className="bg-gray-100 font-bold text-gray-800 print:bg-transparent">
-              <td className="p-2 border border-gray-300 text-left">PERCENTAGE</td>
-              <td className="p-2 border border-gray-300">{t1.percent}%</td>
-              <td className="p-2 border border-gray-300">{t2.percent}%</td>
-              <td className="p-2 border border-gray-300">{hy.percent}%</td>
-              <td className="p-2 border border-gray-300 bg-blue-200 text-primary-800 print:bg-gray-200 print:text-black">{group1Percent}%</td>
-              <td className="p-2 border border-gray-300">{t3.percent}%</td>
-              <td className="p-2 border border-gray-300">{t4.percent}%</td>
-              <td className="p-2 border border-gray-300">{final.percent}%</td>
-              <td className="p-2 border border-gray-300 bg-blue-200 text-primary-800 print:bg-gray-200 print:text-black">{group2Percent}%</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
 
-      {/* OVERALL RESULT & SIGNATURE */}
-      <div className="flex flex-col md:flex-row justify-between items-end mt-16 gap-8">
-        
-        {/* Principal Signature */}
-        <div className="text-center w-48">
-          <div className="border-t border-gray-400 mb-2"></div>
-          <p className="font-bold text-gray-800 text-sm uppercase">
-            {schoolInfo?.principal_name || 'Principal'}
-          </p>
-          <p className="text-xs text-gray-500">Principal Signature</p>
+            <div className="report-subtitle">
+              Academic Performance Record
+            </div>
+
+            <div className="report-heading">
+              STUDENT REPORT CARD
+            </div>
+          </div>
         </div>
 
-        {/* Overall Result Box */}
-        <div className="border-2 border-primary-600 rounded-xl p-5 w-full md:w-80 bg-blue-50 print:bg-transparent">
-          <h3 className="text-center font-bold text-lg mb-3 border-b border-primary-200 pb-2 text-primary-800">Overall Result</h3>
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-600 font-medium">Grand Total:</span>
-            <span className="font-bold text-dark">{overallTotal.obt} / {overallTotal.max}</span>
+        {/* STUDENT DETAILS */}
+        <div className="report-student-info">
+          <div className="report-info-item">
+            Student Name:
+            <strong>{student.student_name || 'N/A'}</strong>
           </div>
-          <div className="flex justify-between mb-2 border-b border-primary-200 pb-2">
-            <span className="text-gray-600 font-medium">Overall %:</span>
-            <span className="font-bold text-primary-700">{overallPercent}%</span>
+
+          <div className="report-info-item">
+            Roll Number:
+            <strong>{student.roll_number || 'N/A'}</strong>
           </div>
-          <div className="flex justify-between mt-2 items-center">
-            <span className="text-gray-600 font-bold uppercase text-sm">Final Grade:</span>
-            <span className="font-extrabold text-2xl text-dark bg-white px-3 py-1 rounded shadow-sm print:shadow-none print:border border-gray-200">{getGrade(overallPercent)}</span>
+
+          <div className="report-info-item">
+            Class:
+            <strong>{student.class_name || 'N/A'}</strong>
+          </div>
+
+          <div className="report-info-item">
+            Session:
+            <strong>
+              {schoolInfo?.academic_year || 'N/A'}
+            </strong>
+          </div>
+
+          <div className="report-info-item">
+            Date:
+            <strong>{new Date().toLocaleDateString('en-GB')}</strong>
+          </div>
+
+          <div className="report-info-item">
+            Result:
+            <strong>
+              {Number(overallPercent) >= 33 ? 'PASS' : 'NEEDS IMPROVEMENT'}
+            </strong>
           </div>
         </div>
+
+        {/* MARKS TABLE */}
+        <div className="report-table-wrap">
+          <table className="report-table">
+            <thead>
+              <tr>
+                <th rowSpan="2" className="subject-cell">
+                  SUBJECT
+                </th>
+                <th colSpan="4">FIRST TERM</th>
+                <th colSpan="4">SECOND TERM</th>
+              </tr>
+
+              <tr>
+                <th>Term 1</th>
+                <th>Term 2</th>
+                <th>Half Yearly</th>
+                <th>Total</th>
+                <th>Term 3</th>
+                <th>Term 4</th>
+                <th>Final Exam</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {gridData.map((row, index) => (
+                <tr key={index}>
+                  <td className="subject-cell">
+                    {row.subject}
+                  </td>
+
+                  <td>{getMarks(row, 'Term 1')}</td>
+                  <td>{getMarks(row, 'Term 2')}</td>
+                  <td>{getMarks(row, 'Half Yearly')}</td>
+
+                  <td className="group-total">
+                    {getGroupTotal(row, ['Term 1', 'Term 2', 'Half Yearly'])}
+                  </td>
+
+                  <td>{getMarks(row, 'Term 3')}</td>
+                  <td>{getMarks(row, 'Term 4')}</td>
+                  <td>{getMarks(row, 'Final Exam')}</td>
+
+                  <td className="group-total">
+                    {getGroupTotal(row, ['Term 3', 'Term 4', 'Final Exam'])}
+                  </td>
+                </tr>
+              ))}
+
+              {gridData.length === 0 && (
+                <tr>
+                  <td colSpan="9" style={{ padding: '20px', color: '#64748b' }}>
+                    No marks available yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
+            <tfoot>
+              <tr>
+                <td className="subject-cell">TOTAL MARKS</td>
+                <td>{t1.obt}/{t1.max}</td>
+                <td>{t2.obt}/{t2.max}</td>
+                <td>{hy.obt}/{hy.max}</td>
+                <td>{group1Total.obt}/{group1Total.max}</td>
+                <td>{t3.obt}/{t3.max}</td>
+                <td>{t4.obt}/{t4.max}</td>
+                <td>{final.obt}/{final.max}</td>
+                <td>{group2Total.obt}/{group2Total.max}</td>
+              </tr>
+
+              <tr>
+                <td className="subject-cell">PERCENTAGE</td>
+                <td>{t1.percent}%</td>
+                <td>{t2.percent}%</td>
+                <td>{hy.percent}%</td>
+                <td>{group1Percent}%</td>
+                <td>{t3.percent}%</td>
+                <td>{t4.percent}%</td>
+                <td>{final.percent}%</td>
+                <td>{group2Percent}%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* OVERALL SUMMARY */}
+        <div className="report-summary">
+          <div className="report-summary-card">
+            <span>Grand Total</span>
+            <strong>
+              {overallTotal.obt} / {overallTotal.max}
+            </strong>
+          </div>
+
+          <div className="report-summary-card">
+            <span>Overall Percentage</span>
+            <strong>{overallPercent}%</strong>
+          </div>
+
+          <div className="report-summary-card report-grade">
+            <span>Final Grade</span>
+            <strong>{grade}</strong>
+          </div>
+        </div>
+
+        {/* SIGNATURES */}
+        <div className="report-signatures">
+          <div className="report-signature">
+            <div className="report-signature-line"></div>
+            <strong>Class Teacher</strong>
+            <span>Signature</span>
+          </div>
+
+          <div className="report-signature">
+            <div className="report-signature-line"></div>
+            <strong>
+              {schoolInfo?.principal_name || 'Principal'}
+            </strong>
+            <span>Principal Signature</span>
+          </div>
+        </div>
+
+        <div className="report-footer">
+          This is a computer-generated student report card.
+        </div>
       </div>
-    </div>
+    </>
   )
 }
