@@ -15,6 +15,7 @@ import ReportCardsHome from './pages/dashboard/ReportCardsHome'
 import ClassReportCards from './pages/dashboard/ClassReportCards'
 import StudentMarks from './pages/dashboard/StudentMarks'
 import Settings from './pages/dashboard/Settings'
+import AIAssistant from './pages/dashboard/AIAssistant'
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/dashboard/report-cards/class/:id" element={<ClassReportCards />} />
           
           <Route path="/dashboard/student/:studentId" element={<StudentMarks />} />
+          <Route path="/dashboard/ai-assistant" element={<AIAssistant />} />
           <Route path="/dashboard/settings" element={<Settings />} />
         </Route>
       </Route>
