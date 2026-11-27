@@ -14,15 +14,6 @@ export default function ReportCardDocument({
     overallTotal, overallPercent
   } = totals
 
-  const exams = [
-    'Term 1',
-    'Term 2',
-    'Half Yearly',
-    'Term 3',
-    'Term 4',
-    'Final Exam'
-  ]
-
   const getMarks = (row, exam) =>
     row.marks?.[exam]?.marks_obtained ?? '-'
 
@@ -228,13 +219,17 @@ export default function ReportCardDocument({
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          margin-top: 55px;
+          margin-top: 24px;
           padding: 0 20px;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
 
         .report-signature {
           width: 190px;
           text-align: center;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
 
         .report-signature-line {
@@ -256,19 +251,10 @@ export default function ReportCardDocument({
           margin-top: 3px;
         }
 
-        .report-footer {
-          text-align: center;
-          font-size: 9px;
-          color: #94a3b8;
-          margin-top: 18px;
-          border-top: 1px solid #e2e8f0;
-          padding-top: 8px;
-        }
-
         @media print {
           @page {
             size: A4 landscape;
-            margin: 7mm;
+            margin: 5mm;
           }
 
           body {
@@ -281,60 +267,99 @@ export default function ReportCardDocument({
           .report-sheet {
             width: 100%;
             max-width: none;
-            padding: 8px;
+            padding: 5px 8px;
             margin: 0;
             border: none;
             border-radius: 0;
             box-shadow: none;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
 
           .report-top {
-            padding-bottom: 8px;
+            padding-bottom: 6px;
           }
 
           .report-logo {
-            width: 58px;
-            height: 58px;
+            width: 52px;
+            height: 52px;
           }
 
           .report-school-name {
-            font-size: 22px;
+            font-size: 21px;
+          }
+
+          .report-subtitle {
+            font-size: 10px;
+            margin-top: 3px;
           }
 
           .report-heading {
-            margin-top: 7px;
-            padding: 4px 18px;
+            margin-top: 5px;
+            padding: 3px 16px;
+            font-size: 11px;
           }
 
           .report-student-info {
-            margin: 9px 0;
-            padding: 8px 12px;
+            margin: 7px 0;
+            padding: 6px 10px;
+            gap: 6px 15px;
+          }
+
+          .report-info-item {
+            font-size: 10px;
+          }
+
+          .report-table {
+            font-size: 9px;
           }
 
           .report-table th,
           .report-table td {
-            padding: 5px 2px;
+            padding: 4px 2px;
+          }
+
+          .report-table thead tr:first-child th {
+            padding: 6px 2px;
+            font-size: 9px;
+          }
+
+          .report-table thead tr:nth-child(2) th {
+            font-size: 8px;
           }
 
           .report-summary {
-            margin-top: 9px;
+            margin-top: 7px;
             gap: 8px;
           }
 
           .report-summary-card {
-            padding: 7px;
+            padding: 5px;
+          }
+
+          .report-summary-card span {
+            font-size: 9px;
           }
 
           .report-summary-card strong {
-            font-size: 15px;
+            font-size: 14px;
+            margin-top: 3px;
           }
 
           .report-signatures {
-            margin-top: 35px;
+            margin-top: 17px !important;
+            padding: 0 20px;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .report-signature {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
 
           .report-footer {
-            margin-top: 10px;
+            display: none !important;
           }
         }
       `}</style>
@@ -394,9 +419,7 @@ export default function ReportCardDocument({
 
           <div className="report-info-item">
             Session:
-            <strong>
-              {schoolInfo?.academic_year || 'N/A'}
-            </strong>
+            <strong>{schoolInfo?.academic_year || 'N/A'}</strong>
           </div>
 
           <div className="report-info-item">
@@ -439,22 +462,16 @@ export default function ReportCardDocument({
             <tbody>
               {gridData.map((row, index) => (
                 <tr key={index}>
-                  <td className="subject-cell">
-                    {row.subject}
-                  </td>
-
+                  <td className="subject-cell">{row.subject}</td>
                   <td>{getMarks(row, 'Term 1')}</td>
                   <td>{getMarks(row, 'Term 2')}</td>
                   <td>{getMarks(row, 'Half Yearly')}</td>
-
                   <td className="group-total">
                     {getGroupTotal(row, ['Term 1', 'Term 2', 'Half Yearly'])}
                   </td>
-
                   <td>{getMarks(row, 'Term 3')}</td>
                   <td>{getMarks(row, 'Term 4')}</td>
                   <td>{getMarks(row, 'Final Exam')}</td>
-
                   <td className="group-total">
                     {getGroupTotal(row, ['Term 3', 'Term 4', 'Final Exam'])}
                   </td>
@@ -535,9 +552,6 @@ export default function ReportCardDocument({
           </div>
         </div>
 
-        <div className="report-footer">
-          This is a computer-generated student report card.
-        </div>
       </div>
     </>
   )
