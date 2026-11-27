@@ -19,99 +19,749 @@ export default function ReportCardDocument({
     overallTotal, overallPercent
   } = totals
 
+  const grade = getGrade(overallPercent)
   const today = new Date().toLocaleDateString('en-GB')
 
-  const grade = getGrade(overallPercent)
-
-  const moneyFormat = (value) =>
-    Number(value || 0).toLocaleString('en-IN')
-
-  const columns = [
-    { label: 'TERM 1', data: t1 },
-    { label: 'TERM 2', data: t2 },
-    { label: 'HALF YEARLY', data: hy },
-    { label: 'TERM 3', data: t3 },
-    { label: 'TERM 4', data: t4 },
-    { label: 'FINAL', data: final }
+  const exams = [
+    ['Term 1', 't1'],
+    ['Term 2', 't2'],
+    ['Half Yearly', 'hy'],
+    ['Term 3', 't3'],
+    ['Term 4', 't4'],
+    ['Final Exam', 'final']
   ]
+
+  const examMarks = (row, name) =>
+    row.marks?.[name]?.marks_obtained ?? '—'
+
+  const addMarks = (values) => {
+    const available = values.filter(v => v !== '—')
+    return available.length
+      ? available.reduce((sum, v) => sum + Number(v || 0), 0)
+      : '—'
+  }
+
+  const gradeText = String(grade ?? '—')
+  const compact = gridData.length > 10
 
   return (
     <>
       <style>{`
-        .report-card-document {
+        .pro-report {
+          --navy: #152f50;
+          --blue: #24558a;
+          --gold: #b9934d;
+          --ink: #26364a;
+          --muted: #718096;
           width: 100%;
           max-width: 1120px;
-          margin: 20px auto;
-          padding: 26px 30px;
-          background: #ffffff;
-          color: #172b4d;
+          margin: 24px auto;
+          padding: 30px 34px;
+          background: #fff;
+          color: var(--ink);
           font-family: Arial, Helvetica, sans-serif;
-          border: 1px solid #dce3ed;
-          border-radius: 9px;
-          box-shadow: 0 5px 25px rgba(20,40,70,.08);
+          border: 1px solid #dce3ec;
+          border-radius: 8px;
+          box-shadow: 0 10px 35px rgba(21,47,80,.09);
         }
 
-        .rc-heading {
+        .pr-top {
+          height: 5px;
+          margin: -30px -34px 22px;
+          background: linear-gradient(90deg,#152f50 0 75%,#b9934d 75%);
+          border-radius: 8px 8px 0 0;
+        }
+
+        .pr-header {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 18px;
           text-align: center;
-          padding-bottom: 15px;
-          border-bottom: 3px solid #244776;
+          padding-bottom: 16px;
+          border-bottom: 2px solid var(--navy);
         }
 
-        .rc-logo {
-          width: 68px;
-          height: 68px;
+        .pr-logo {
+          width: 72px;
+          height: 72px;
           object-fit: contain;
         }
 
-        .rc-school-name {
-          font-size: 25px;
+        .pr-school {
+          margin: 0;
+          color: var(--navy);
+          font-size: 26px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .pr-school-sub {
+          margin-top: 7px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 3px;
+          color: var(--gold);
+        }
+
+        .pr-title {
+          display: inline-block;
+          margin-top: 12px;
+          padding: 6px 22px;
+          background: var(--navy);
+          color: white;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 2px;
+          border-radius: 3px;
+        }
+
+        .pr-student {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr 1fr;
+          margin: 17px 0;
+          background: #f5f8fc;
+          border: 1px solid #dce4ee;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+
+        .pr-field {
+          padding: 11px 13px;
+          border-right: 1px solid #e0e6ef;
+          border-bottom: 1px solid #e0e6ef;
+          min-width: 0;
+        }
+
+        .pr-label {
+          display: block;
+          color: #8190a4;
+          font-size: 9px;
           font-weight: 800;
           letter-spacing: 1px;
-          color: #18365f;
+          margin-bottom: 5px;
           text-transform: uppercase;
         }
 
-        .rc-heading-sub {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 3px;
-          color: #718096;
-          margin-top: 6px;
+        .pr-value {
+          color: var(--navy);
+          font-size: 13px;
+          font-weight: 800;
+          text-transform: uppercase;
+          overflow-wrap: anywhere;
         }
 
-        .rc-details {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 9px 18px;
-          padding: 13px 15px;
-          margin: 15px 0;
-          background: #f4f7fb;
-          border: 1px solid #dce5f0;
-          border-radius: 5px;
+        .pr-section {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin: 17px 0 9px;
+          color: var(--navy);
           font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
         }
 
-        .rc-detail-label {
-          color: #64748b;
-          font-weight: 700;
+        .pr-section:after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: #dce3ed;
         }
 
-        .rc-detail-value {
-          color: #1e3556;
+        .pr-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 10px;
+        }
+
+        .pr-table th {
+          background: var(--navy);
+          color: white;
+          padding: 10px 3px;
+          border: 1px solid #294767;
+          font-size: 9px;
+          line-height: 1.35;
+          text-align: center;
+        }
+
+        .pr-table th:first-child,
+        .pr-table td:first-child {
+          width: 17%;
+          text-align: left;
+          padding-left: 9px;
+        }
+
+        .pr-table td {
+          padding: 9px 3px;
+          text-align: center;
+          border: 1px solid #dce3ec;
+          color: #3a4a5e;
+          font-weight: 600;
+        }
+
+        .pr-table tbody tr:nth-child(even) {
+          background: #f7f9fc;
+        }
+
+        .pr-table tbody td:first-child {
+          color: var(--navy);
           font-weight: 800;
-          margin-left: 4px;
+          text-transform: uppercase;
         }
 
-        .rc-section-heading {
-          font-size: 11px;
-          font-weight: 800;
+        .pr-table .pr-group {
+          background: #edf3fa;
+          color: #20528a;
+          font-weight: 900;
+        }
+
+        .pr-table tfoot td {
+          padding: 9px 3px;
+          background: #eaf0f7;
+          color: var(--navy);
+          font-weight: 900;
+        }
+
+        .pr-table tfoot tr:last-child td {
+          background: #f3f6fa;
+        }
+
+        .pr-result-area {
+          display: grid;
+          grid-template-columns: 1.05fr 1.35fr;
+          gap: 20px;
+          margin-top: 20px;
+          align-items: stretch;
+        }
+
+        .pr-result {
+          padding: 15px;
+          border: 1px solid #cfdae8;
+          border-left: 5px solid var(--gold);
+          border-radius: 7px;
+          background: #f5f8fc;
+        }
+
+        .pr-result-heading {
+          color: var(--navy);
+          font-size: 12px;
+          font-weight: 900;
           letter-spacing: 1px;
-          color: #244776;
-          margin: 15px 0 8px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #dce4ee;
+          margin-bottom: 12px;
+        }
+
+        .pr-total {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .pr-total span {
+          color: var(--muted);
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+
+        .pr-total strong {
+          color: var(--navy);
+          font-size: 20px;
+          font-weight: 900;
+        }
+
+        .pr-stats {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 8px;
+          margin-top: 15px;
+          padding-top: 12px;
+          border-top: 1px solid #dce4ee;
+        }
+
+        .pr-stat-label {
+          display: block;
+          color: #8290a2;
+          font-size: 8px;
+          font-weight: 800;
+          letter-spacing: .7px;
+          margin-bottom: 7px;
+        }
+
+        .pr-stat-value {
+          color: var(--navy);
+          font-size: 16px;
+          font-weight: 900;
+        }
+
+        .pr-grade {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 39px;
+          min-height: 34px;
+          padding: 4px 9px;
+          border-radius: 5px;
+          background: var(--navy);
+          color: #fff;
+          font-size: 16px;
+          font-weight: 900;
+        }
+
+        .pr-approvals {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 28px;
+          align-items: end;
+          padding: 8px 5px 3px;
+        }
+
+        .pr-sign {
+          text-align: center;
+        }
+
+        .pr-sign-space {
+          height: 55px;
+        }
+
+        .pr-sign-line {
+          border-top: 1px solid #53677e;
+          margin-bottom: 8px;
+        }
+
+        .pr-sign-name {
+          color: var(--navy);
+          font-size: 11px;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .pr-sign-sub {
+          margin-top: 5px;
+          color: #8290a2;
+          font-size: 9px;
+        }
+
+        .pr-footer {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 17px;
+          padding-top: 9px;
+          border-top: 1px solid #e0e6ed;
+          color: #8793a4;
+          font-size: 9px;
+        }
+
+        .pr-compact .pr-table td {
+          padding-top: 6px;
+          padding-bottom: 6px;
+        }
+
+        .pr-compact .pr-sign-space {
+          height: 35px;
+        }
+
+        @page {
+          size: A4 landscape;
+          margin: 7mm;
+        }
+
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+
+          body * {
+            visibility: hidden !important;
+          }
+
+          .pro-report,
+          .pro-report * {
+            visibility: visible !important;
+          }
+
+          .pro-report {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 283mm !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 4mm 5mm !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+
+          .pr-top {
+            margin: -4mm -5mm 4mm !important;
+            border-radius: 0 !important;
+          }
+
+          .pr-header {
+            padding-bottom: 7px !important;
+          }
+
+          .pr-logo {
+            width: 45px !important;
+            height: 45px !important;
+          }
+
+          .pr-school {
+            font-size: 21px !important;
+          }
+
+          .pr-student {
+            margin: 8px 0 !important;
+          }
+
+          .pr-field {
+            padding: 6px 9px !important;
+          }
+
+          .pr-section {
+            margin: 8px 0 5px !important;
+          }
+
+          .pr-table th {
+            padding: 6px 2px !important;
+            font-size: 8px !important;
+          }
+
+          .pr-table td {
+            padding: 5px 2px !important;
+            font-size: 9px !important;
+          }
+
+          .pr-result-area {
+            margin-top: 10px !important;
+            gap: 12px !important;
+          }
+
+          .pr-result {
+            padding: 9px 12px !important;
+          }
+
+          .pr-sign-space {
+            height: 30px !important;
+          }
+
+          .pr-footer {
+            margin-top: 8px !important;
+            padding-top: 5px !important;
+          }
+
+          .pr-table tr,
+          .pr-result-area {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+
+        @media screen and (max-width: 650px) {
+          .pro-report {
+            padding: 15px;
+            overflow-x: auto;
+          }
+
+          .pr-header,
+          .pr-student,
+          .pr-table,
+          .pr-result-area {
+            min-width: 650px;
+          }
+        }
+      `}</style>
+
+      <article className={`pro-report ${compact ? 'pr-compact' : ''}`}>
+
+        <div className="pr-top" />
+
+        {/* SCHOOL IDENTITY */}
+
+        <header className="pr-header">
+
+          {schoolInfo?.school_logo_url && (
+            <img
+              src={schoolInfo.school_logo_url}
+              alt="School Logo"
+              className="pr-logo"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+
+          <div>
+            <h1 className="pr-school">
+              {schoolInfo?.school_name || 'RAINBOW PUBLIC SCHOOL'}
+            </h1>
+
+            <div className="pr-school-sub">
+              EXCELLENCE IN EDUCATION
+            </div>
+
+            <div className="pr-title">
+              STUDENT REPORT CARD
+            </div>
+          </div>
+
+        </header>
+
+        {/* STUDENT DETAILS */}
+
+        <section className="pr-student">
+
+          <div className="pr-field">
+            <span className="pr-label">Student Name</span>
+            <span className="pr-value">
+              {student.student_name || '—'}
+            </span>
+          </div>
+
+          <div className="pr-field">
+            <span className="pr-label">Roll Number</span>
+            <span className="pr-value">
+              {student.roll_number || 'N/A'}
+            </span>
+          </div>
+
+          <div className="pr-field">
+            <span className="pr-label">Class</span>
+            <span className="pr-value">
+              {student.class_name || 'N/A'}
+            </span>
+          </div>
+
+          <div className="pr-field">
+            <span className="pr-label">Academic Report</span>
+            <span className="pr-value">Annual Result</span>
+          </div>
+
+          <div className="pr-field">
+            <span className="pr-label">Date of Issue</span>
+            <span className="pr-value">{today}</span>
+          </div>
+
+          <div className="pr-field">
+            <span className="pr-label">Subjects</span>
+            <span className="pr-value">{gridData.length}</span>
+          </div>
+
+        </section>
+
+        {/* SUBJECT PERFORMANCE */}
+
+        <div className="pr-section">
+          SCHOLASTIC PERFORMANCE
+        </div>
+
+        <table className="pr-table">
+
+          <thead>
+            <tr>
+              <th>SUBJECT</th>
+              <th>TERM 1</th>
+              <th>TERM 2</th>
+              <th>HALF<br/>YEARLY</th>
+              <th>GROUP 1<br/>TOTAL</th>
+              <th>TERM 3</th>
+              <th>TERM 4</th>
+              <th>FINAL<br/>EXAM</th>
+              <th>GROUP 2<br/>TOTAL</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {gridData.map((row, idx) => {
+              const a = examMarks(row, 'Term 1')
+              const b = examMarks(row, 'Term 2')
+              const c = examMarks(row, 'Half Yearly')
+              const d = examMarks(row, 'Term 3')
+              const e = examMarks(row, 'Term 4')
+              const f = examMarks(row, 'Final Exam')
+
+              return (
+                <tr key={idx}>
+                  <td>{row.subject}</td>
+                  <td>{a}</td>
+                  <td>{b}</td>
+                  <td>{c}</td>
+                  <td className="pr-group">
+                    {addMarks([a,b,c])}
+                  </td>
+                  <td>{d}</td>
+                  <td>{e}</td>
+                  <td>{f}</td>
+                  <td className="pr-group">
+                    {addMarks([d,e,f])}
+                  </td>
+                </tr>
+              )
+            })}
+
+            {gridData.length === 0 && (
+              <tr>
+                <td colSpan="9">No marks available yet.</td>
+              </tr>
+            )}
+
+          </tbody>
+
+          <tfoot>
+
+            <tr>
+              <td>TOTAL MARKS</td>
+              <td>{t1.obt}/{t1.max}</td>
+              <td>{t2.obt}/{t2.max}</td>
+              <td>{hy.obt}/{hy.max}</td>
+              <td>{group1Total.obt}/{group1Total.max}</td>
+              <td>{t3.obt}/{t3.max}</td>
+              <td>{t4.obt}/{t4.max}</td>
+              <td>{final.obt}/{final.max}</td>
+              <td>{group2Total.obt}/{group2Total.max}</td>
+            </tr>
+
+            <tr>
+              <td>PERCENTAGE</td>
+              <td>{t1.percent}%</td>
+              <td>{t2.percent}%</td>
+              <td>{hy.percent}%</td>
+              <td>{group1Percent}%</td>
+              <td>{t3.percent}%</td>
+              <td>{t4.percent}%</td>
+              <td>{final.percent}%</td>
+              <td>{group2Percent}%</td>
+            </tr>
+
+          </tfoot>
+
+        </table>
+
+        {/* FINAL RESULT */}
+
+        <div className="pr-section">
+          FINAL ACADEMIC RESULT
+        </div>
+
+        <section className="pr-result-area">
+
+          <div className="pr-result">
+
+            <div className="pr-result-heading">
+              PERFORMANCE SUMMARY
+            </div>
+
+            <div className="pr-total">
+              <span>Grand Total</span>
+              <strong>
+                {overallTotal.obt} / {overallTotal.max}
+              </strong>
+            </div>
+
+            <div className="pr-stats">
+
+              <div>
+                <span className="pr-stat-label">
+                  PERCENTAGE
+                </span>
+                <strong className="pr-stat-value">
+                  {overallPercent}%
+                </strong>
+              </div>
+
+              <div>
+                <span className="pr-stat-label">
+                  FINAL GRADE
+                </span>
+                <strong className="pr-grade">
+                  {gradeText}
+                </strong>
+              </div>
+
+              <div>
+                <span className="pr-stat-label">
+                  SUBJECTS
+                </span>
+                <strong className="pr-stat-value">
+                  {gridData.length}
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* APPROVAL ORDER */}
+
+          <div className="pr-approvals">
+
+            <div className="pr-sign">
+
+              <div className="pr-sign-space" />
+
+              <div className="pr-sign-line" />
+
+              <div className="pr-sign-name">
+                CLASS TEACHER
+              </div>
+
+              <div className="pr-sign-sub">
+                Checked & Recommended
+              </div>
+
+            </div>
+
+            <div className="pr-sign">
+
+              <div className="pr-sign-space" />
+
+              <div className="pr-sign-line" />
+
+              <div className="pr-sign-name">
+                {schoolInfo?.principal_name || 'PRINCIPAL'}
+              </div>
+
+              <div className="pr-sign-sub">
+                Approved By Principal
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <footer className="pr-footer">
+          <span>
+            {schoolInfo?.school_name || 'Rainbow Public School'}
+          </span>
+
+          <span>
+            OFFICIAL ACADEMIC DOCUMENT
+          </span>
+        </footer>
+
+      </article>
+    </>
+  )
+}
+
           text-transform: uppercase;
         }
 
